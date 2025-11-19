@@ -5,22 +5,22 @@ dir_data=$HOME/.libnano/datasets
 function unzip_dir {
     local dir=$1
 
-    for file in ${dir}/*.gz; do
-        gunzip -fk ${file} || return 1
+    for file in "${dir}"/*.gz; do
+        gunzip -fk "${file}" || return 1
     done
 }
 
 function untar_dir {
     local dir=$1
 
-    for file in ${dir}/*.tar.gz; do
-        tar -xvf ${file} -C ${dir} || return 1
+    for file in "${dir}"/*.tar.gz; do
+        tar -xvf "${file}" -C "${dir}" || return 1
     done
 }
 
 function download_mnist {
     local dir=${dir_data}/mnist/
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
     files=(
         "train-images.idx3-ubyte.gz"
@@ -30,110 +30,110 @@ function download_mnist {
     )
 
     for file in "${files[@]}"; do
-        #wget -N http://yann.lecun.com/exdb/mnist/${file} -P ${dir} || return 1
-        wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/mnist-mld/${file} -P ${dir} || return 1
+        #wget -N http://yann.lecun.com/exdb/mnist/"${file}" -P "${dir}" || return 1
+        wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/mnist-mld/"${file}" -P "${dir}" || return 1
     done
 
-    for file in `ls ${dir}/*.gz`; do
-        mv ${file} ${file/.idx/-idx}
+    for file in "${dir}"/*.gz; do
+        mv "${file}" "${file/.idx/-idx}"
     done
 
-    unzip_dir ${dir} || return 1
+    unzip_dir "${dir}" || return 1
 }
 
 function download_fashion_mnist {
     local dir=${dir_data}/fashion-mnist/
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz -P ${dir} || return 1
-    wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-labels-idx1-ubyte.gz -P ${dir} || return 1
-    wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz -P ${dir} || return 1
-    wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz -P ${dir} || return 1
+    wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz -P "${dir}" || return 1
+    wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-labels-idx1-ubyte.gz -P "${dir}" || return 1
+    wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz -P "${dir}" || return 1
+    wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz -P "${dir}" || return 1
 
-    unzip_dir ${dir} || return 1
+    unzip_dir "${dir}" || return 1
 }
 
 function download_cifar10 {
     local dir=${dir_data}/cifar10/
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz -P ${dir} || return 1
+    wget -N http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz -P "${dir}" || return 1
 
-    untar_dir ${dir} || return 1
+    untar_dir "${dir}" || return 1
 }
 
 function download_cifar100 {
     local dir=${dir_data}/cifar100/
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz -P ${dir} || return 1
+    wget -N http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz -P "${dir}" || return 1
 
-    untar_dir ${dir} || return 1
+    untar_dir "${dir}" || return 1
 }
 
 function download_iris {
     local dir=${dir_data}/iris/
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data -P ${dir} || return 1
-    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.names -P ${dir} || return 1
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data -P "${dir}" || return 1
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.names -P "${dir}" || return 1
 }
 
 function download_wine {
     local dir=${dir_data}/wine/
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data -P ${dir} || return 1
-    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.names -P ${dir} || return 1
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data -P "${dir}" || return 1
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.names -P "${dir}" || return 1
 }
 
 function download_adult {
     local dir=${dir_data}/adult
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data -P ${dir} || return 1
-    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test -P ${dir} || return 1
-    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.names -P ${dir} || return 1
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data -P "${dir}" || return 1
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test -P "${dir}" || return 1
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.names -P "${dir}" || return 1
 }
 
 function download_forest_fires {
     local dir=${dir_data}/forest-fires
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.csv -P ${dir} || return 1
-    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.names -P ${dir} || return 1
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.csv -P "${dir}" || return 1
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.names -P "${dir}" || return 1
 }
 
 function download_breast_cancer {
     local dir=${dir_data}/breast-cancer
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data -P ${dir} || return 1
-    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.names -P ${dir} || return 1
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data -P "${dir}" || return 1
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.names -P "${dir}" || return 1
 }
 
 function download_abalone {
     local dir=${dir_data}/abalone
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data -P ${dir} || return 1
-    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.names -P ${dir} || return 1
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data -P "${dir}" || return 1
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.names -P "${dir}" || return 1
 }
 
 function download_bank_marketing {
     local dir=${dir_data}/bank-marketing
-    mkdir -p ${dir}
+    mkdir -p "${dir}"
 
-    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank.zip -P ${dir} || return 1
-    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip -P ${dir} || return 1
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank.zip -P "${dir}" || return 1
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip -P "${dir}" || return 1
 
-    unzip -o ${dir}/bank.zip -d ${dir} || return 1
-    unzip -o ${dir}/bank-additional.zip -d ${dir} || return 1
+    unzip -o "${dir}"/bank.zip -d "${dir}" || return 1
+    unzip -o "${dir}"/bank-additional.zip -d "${dir}" || return 1
 
-    mv -f ${dir}/bank-additional/* ${dir}
-    rm -rf ${dir}/__MACOSX
-    rm -rf ${dir}/bank-additional
-    rm -f ${dir}/*.zip
+    mv -f "${dir}"/bank-additional/* "${dir}"
+    rm -rf "${dir}"/__MACOSX
+    rm -rf "${dir}"/bank-additional
+    rm -f "${dir}"/*.zip
 }
 
 function download_all {

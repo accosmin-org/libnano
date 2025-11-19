@@ -118,6 +118,8 @@ options:
         check the markdown documentation (e.g. invalid C++ includes, invalid local links)
     --check-source-files
         check the source files are used properly (e.g. unreferenced files in CMake scripts)
+    --shellcheck
+        check bash scripts with shellcheck
     -D[option]
         options to pass directly to cmake build (e.g. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON)
     -G[option]

@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-basepath=`readlink -f "$0" || greadlink -f "$0"`
-basedir=`dirname "${basepath}"`
-basedir=`dirname "${basedir}"`
+basepath=$(readlink -f "$0" || greadlink -f "$0")
+basedir=$(dirname "$(dirname "${basepath}")")
 
-installdir=${basedir}/install
-libnanodir=${basedir}/build/libnano
-exampledir=${basedir}/build/example
+installdir="${basedir}"/install
+libnanodir="${basedir}"/build/libnano
+exampledir="${basedir}"/build/example
 
 clang_suffix=""
 cmake_options="-GNinja -DBUILD_SHARED_LIBS=ON"
@@ -95,49 +94,49 @@ function setup_llvm_coverage {
 }
 
 function setup_suffix {
-    installdir=${basedir}/install/$1
-    libnanodir=${basedir}/build/libnano/$1
-    exampledir=${basedir}/build/example/$1
+    installdir="${basedir}"/install/$1
+    libnanodir="${basedir}"/build/libnano/$1
+    exampledir="${basedir}"/build/example/$1
 
     export PATH="${PATH}:${installdir}"
 }
 
 function call_config {
-    cd ${basedir}
-    cmake -H${basedir} -B${libnanodir} ${cmake_options} \
+    cd "${basedir}" || return 1
+    cmake -H"${basedir}" -B"${libnanodir}" ${cmake_options} \
         -DCMAKE_INSTALL_PREFIX=${installdir} || return 1
 }
 
 function call_build {
-    cd ${libnanodir}
+    cd "${libnanodir}" || return 1
     echo "-- Using ${threads} threads to build"
-    cmake --build ${libnanodir} -- -j ${threads} || return 1
+    cmake --build "${libnanodir}" -- -j ${threads} || return 1
 }
 
 function call_test {
-    cd ${libnanodir}
+    cd "${libnanodir}" || return 1
     echo "-- Using ${threads} threads to test"
     ctest --output-on-failure -j ${threads} || return 1
 }
 
 function call_install {
-    cd ${libnanodir}
-    cmake --install ${libnanodir} --strip || return 1
+    cd "${libnanodir}" || return 1
+    cmake --install "${libnanodir}" --strip || return 1
 }
 
 function call_example {
-    cd ${basedir}
-    cmake -Hexample -B${exampledir} ${cmake_options} \
+    cd "${basedir}" || return 1
+    cmake -Hexample -B"${exampledir}" ${cmake_options} \
         -DCMAKE_PREFIX_PATH=${installdir} || return 1
-    cd ${exampledir}
+    cd "${exampledir}"
     echo "-- Using ${threads} threads to build"
-    cmake --build ${exampledir} -- -j ${threads} || return 1
+    cmake --build "${exampledir}" -- -j ${threads} || return 1
     echo "-- Using ${threads} threads to test"
     ctest --output-on-failure -j ${threads} || return 1
 }
 
 function call_cppcheck {
-    cd ${libnanodir}
+    cd "${libnanodir}" || return 1
 
     cppcheck_version=$(cppcheck --version)
     echo "-- Using cppcheck ${cppcheck_version/* /}"
@@ -165,24 +164,24 @@ lcov_options="
     "
 
 function call_lcov_init {
-    cd ${basedir}
+    cd "${basedir}" || return 1
 
-    local base_output=${basedir}/lcov_base.info
+    local base_output="${basedir}"/lcov_base.info
 
-    lcov ${lcov_options} --no-external --capture --initial --directory ${basedir} \
+    lcov ${lcov_options} --no-external --capture --initial --directory "${basedir}" \
         --output-file ${base_output} || return 1
 }
 
 function call_lcov {
-    cd ${basedir}
+    cd "${basedir}" || return 1
 
-    local output=${basedir}/lcov.info
-    local html_output=${basedir}/lcovhtml
-    local comb_output=${basedir}/lcov_comb.info
-    local base_output=${basedir}/lcov_base.info
-    local test_output=${basedir}/lcov_test.info
+    local output="${basedir}"/lcov.info
+    local html_output="${basedir}"/lcovhtml
+    local comb_output="${basedir}"/lcov_comb.info
+    local base_output="${basedir}"/lcov_base.info
+    local test_output="${basedir}"/lcov_test.info
 
-    lcov ${lcov_options} --no-external --capture --directory ${basedir} \
+    lcov ${lcov_options} --no-external --capture --directory "${basedir}" \
         --output-file ${test_output} || return 1
 
     lcov ${lcov_options} --add-tracefile ${base_output} --add-tracefile ${test_output} \
@@ -195,33 +194,33 @@ function call_lcov {
 
     lcov ${lcov_options} --list ${output} || return 1
 
-    genhtml ${lcov_options} --prefix ${basedir} --ignore-errors source ${output} --legend --title "libnano" \
+    genhtml ${lcov_options} --prefix "${basedir}" --ignore-errors source ${output} --legend --title "libnano" \
         --output-directory=${html_output} || return 1
 }
 
 function call_codecov {
-    cd ${basedir}
+    cd "${basedir}" || return 1
 
-    local output=${basedir}/lcov.info
+    local output="${basedir}"/lcov.info
 
     bash <(curl -s https://codecov.io/bash) -f ${output} || return 1
 }
 
 function call_llvm_cov {
-    cd ${basedir}
+    cd "${basedir}" || return 1
 
-    local output=${basedir}/llvmcov.info
+    local output="${basedir}"/llvmcov.info
 
-    tests=$(find ${libnanodir}/test/test_* | grep -v profraw | grep -v profdata)
+    tests=$(find "${libnanodir}"/test/test_* | grep -v profraw | grep -v profdata)
     objects=""
-    for object in $(find ${libnanodir}/src/lib*.so); do
+    for object in $(find "${libnanodir}"/src/lib*.so); do
         objects="${objects} -object ${object}"
     done
     for utest in ${tests}; do
         objects="${objects} -object ${utest}"
     done
 
-    llvm-profdata merge -sparse $(find ${libnanodir}/test/*.profraw) -o ${output}
+    llvm-profdata merge -sparse $(find "${libnanodir}"/test/*.profraw) -o ${output}
 
     llvm-cov show \
         -instr-profile=${output} \
@@ -242,17 +241,17 @@ function call_llvm_cov {
         -ignore-filename-regex=test\/ \
         -format=text -Xdemangler=c++filt -tab-size=4 \
         -show-line-counts --show-branches=count --show-expansions --show-instantiation-summary \
-        ${objects} > ${basedir}/llvmcov.text
+        ${objects} > "${basedir}"/llvmcov.text
 }
 
 function call_memcheck {
-    cd ${libnanodir}
+    cd "${libnanodir}" || return 1
     echo "-- Using ${threads} threads to test"
     ctest -T memcheck --output-on-failure -j ${threads} || return 1
 }
 
 function call_helgrind {
-    cd ${libnanodir}
+    cd "${libnanodir}" || return 1
 
     returncode=0
     utests="test/test_core_parallel"
@@ -277,7 +276,7 @@ function call_helgrind {
 }
 
 function call_clang_tidy {
-    cd ${libnanodir}
+    cd "${libnanodir}" || return 1
 
     check=$1
 
@@ -288,7 +287,7 @@ function call_clang_tidy {
     wrapper=run-clang-tidy${clang_suffix}
     wrapper=$(which ${wrapper} || which ${wrapper}.py || which /usr/share/clang/${wrapper}.py)
     echo "-- Using wrapper ${wrapper}"
-    ${wrapper} -p ${libnanodir} -clang-tidy-binary clang-tidy${clang_suffix} \
+    ${wrapper} -p "${libnanodir}" -clang-tidy-binary clang-tidy${clang_suffix} \
         -header-filter=.* -checks=-*,${check} -quiet -j ${threads} > $log 2>&1
 
     if [[ $? -ne 0 ]]; then
@@ -404,17 +403,17 @@ function call_clang_tidy_all {
 
 function call_clang_format {
     files=$(find \
-        ${basedir}/app \
-        ${basedir}/src \
-        ${basedir}/test \
-        ${basedir}/example \
-        ${basedir}/include \
+        "${basedir}"/app \
+        "${basedir}"/src \
+        "${basedir}"/test \
+        "${basedir}"/example \
+        "${basedir}"/include \
         -type f \( -name "*.h" -o -name "*.cpp" \))
 
     cmd=clang-format${clang_suffix}
     echo "-- Using ${cmd}..."
 
-    log=${basedir}/clang_format.log
+    log="${basedir}"/clang_format.log
     rm -f ${log}
 
     for file in ${files}; do
@@ -438,7 +437,7 @@ function call_clang_format {
 }
 
 function call_sonar {
-    cd ${basedir}
+    cd "${basedir}" || return 1
 
     export SONAR_SCANNER_VERSION=7.3.0.5189
     export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux-x64
@@ -456,17 +455,27 @@ function call_sonar {
     sonar-scanner \
         -Dsonar.organization=accosmin \
         -Dsonar.projectKey=libnano \
-        -Dsonar.sources=${basedir}/src,${basedir}/include/nano,${basedir}/app,${basedir}/example \
+        -Dsonar.sources="${basedir}"/src,"${basedir}"/include/nano,"${basedir}"/app,"${basedir}"/example \
         -Dsonar.projectVersion=0.0.1 \
         -Dsonar.python.version=3 \
-        -Dsonar.cfamily.compile-commands=${libnanodir}/compile_commands.json \
-        -Dsonar.cfamily.llvm-cov.reportPath=${basedir}/llvmcov.text \
+        -Dsonar.cfamily.compile-commands="${libnanodir}"/compile_commands.json \
+        -Dsonar.cfamily.llvm-cov.reportPath="${basedir}"/llvmcov.text \
         -Dsonar.sourceEncoding=UTF-8 \
         -Dsonar.host.url=https://sonarcloud.io
 }
 
+function call_shellcheck {
+    cd "${basedir}" || return 1
+
+    scripts=$(find . -type f -name "*.sh")
+    for script in ${scripts}; do
+        echo "-- Checking bash script: ${script}"
+        shellcheck ${script} || return 1
+    done
+}
+
 function check_source_files {
-    cd ${basedir}
+    cd "${basedir}" || return 1
 
     returncode=0
 
@@ -516,7 +525,7 @@ function check_source_files {
     for filename in ${filenames}; do
         filename=${filename/test\//}
         filename=${filename/\.cpp/}
-        count=`grep make_test\(${filename}\ NANO ${basedir}/test/CMakeLists.txt | wc -l`
+        count=`grep make_test\(${filename}\ NANO "${basedir}"/test/CMakeLists.txt | wc -l`
         if [ ! ${count} = 1 ]; then
             echo -n "-- Error: found test '${filename}' "
             echo "which should be referenced exactly once in 'test/CMakeLists.txt', got ${count} times instead!"
@@ -528,11 +537,11 @@ function check_source_files {
 }
 
 function check_markdown_docs {
-    cd ${basedir}
+    cd "${basedir}" || return 1
 
     returncode=0
 
-    docfiles=`find ${basedir} -type f -name "*.md"`
+    docfiles=`find "${basedir}" -type f -name "*.md"`
     for docfile in ${docfiles}; do
         echo "-- Checking documentation file: ${docfile}"
 
@@ -660,6 +669,8 @@ options:
         check the markdown documentation (e.g. invalid C++ includes, invalid local links)
     --check-source-files
         check the source files are used properly (e.g. unreferenced files in CMake scripts)
+    --shellcheck
+        check bash scripts with shellcheck
     -D[option]
         options to pass directly to cmake build (e.g. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON)
     -G[option]
@@ -691,7 +702,7 @@ while [ "$1" != "" ]; do
         --libcpp)                       setup_libcpp;;
         --coverage)                     setup_coverage;;
         --llvm-coverage)                setup_llvm_coverage;;
-        --suffix)                       shift; setup_suffix $1;;
+        --suffix)                       shift; setup_suffix "$1";;
         --config)                       call_config || exit 1;;
         --build)                        call_build || exit 1;;
         --test)                         call_test || exit 1;;
@@ -702,8 +713,8 @@ while [ "$1" != "" ]; do
         --llvm-cov)                     call_llvm_cov || exit 1;;
         --memcheck)                     call_memcheck || exit 1;;
         --helgrind)                     call_helgrind || exit 1;;
-        --clang-suffix)                 shift; clang_suffix=$1;;
-        --clang-tidy-check)             shift; call_clang_tidy $1 || exit 1;;
+        --clang-suffix)                 shift; clang_suffix="$1";;
+        --clang-tidy-check)             shift; call_clang_tidy "$1" || exit 1;;
         --clang-tidy-all)               call_clang_tidy_all || exit 1;;
         --clang-tidy-misc)              call_clang_tidy_misc || exit 1;;
         --clang-tidy-cert)              call_clang_tidy_cert || exit 1;;
@@ -720,6 +731,7 @@ while [ "$1" != "" ]; do
         --clang-format)                 call_clang_format || exit 1;;
         --sonar)                        call_sonar || exit 1;;
         --codecov)                      call_codecov || exit 1;;
+        --shellcheck)                   call_shellcheck || exit 1;;
         --check-markdown-docs)          check_markdown_docs || exit 1;;
         --check-source-files)           check_source_files || exit 1;;
         -D*)                            cmake_options="${cmake_options} $1";;

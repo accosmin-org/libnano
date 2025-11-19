@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
-trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
-trap 'echo "\"${last_command}\" command failed with exit code $?."' EXIT
+set -ex
 
 cmake_options="-GNinja" #-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=iwyu"
 
@@ -10,15 +8,17 @@ export CXXFLAGS="${CXXFLAGS} -march=x86-64-v3 -Og"
 
 ###############################################################################################################
 # generic checks:
+#   - check bash scripts
 #   - code formatting using a fixed version of clang-format
 #   - code structure
 #   - documentation
 ###############################################################################################################
 
 bash docker/run.sh bash scripts/build.sh \
+    --shellcheck \
+    --clang-format \
     --check-source-files \
-    --check-markdown-docs \
-    --clang-format
+    --check-markdown-docs
 
 ###############################################################################################################
 # standard GCC builds
