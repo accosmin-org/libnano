@@ -72,7 +72,7 @@ if(NOT WIN32)
     find_package(Threads REQUIRED)
 endif()
 
-find_package(Eigen3 3.3 NO_MODULE REQUIRED)
+find_package(Eigen3 NO_MODULE REQUIRED)
 
 ##################################################################################################
 # setup library
