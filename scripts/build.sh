@@ -8,7 +8,7 @@ libnanodir="${basedir}"/build/libnano
 exampledir="${basedir}"/build/example
 
 clang_suffix=""
-cmake_options="-GNinja -DBUILD_SHARED_LIBS=ON"
+cmake_options=(-GNinja -DBUILD_SHARED_LIBS=ON)
 
 cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || echo "$NUMBER_OF_PROCESSORS")
 threads=$((cores+1))
@@ -103,8 +103,8 @@ function setup_suffix {
 
 function call_config {
     cd "${basedir}" || return 1
-    cmake -H"${basedir}" -B"${libnanodir}" ${cmake_options} \
-        -DCMAKE_INSTALL_PREFIX=${installdir} || return 1
+    cmake -H"${basedir}" -B"${libnanodir}" "${cmake_options[@]}" \
+        -DCMAKE_INSTALL_PREFIX="${installdir}" || return 1
 }
 
 function call_build {
@@ -126,9 +126,9 @@ function call_install {
 
 function call_example {
     cd "${basedir}" || return 1
-    cmake -Hexample -B"${exampledir}" ${cmake_options} \
-        -DCMAKE_PREFIX_PATH=${installdir} || return 1
-    cd "${exampledir}"
+    cmake -Hexample -B"${exampledir}" "${cmake_options[@]}" \
+        -DCMAKE_PREFIX_PATH="${installdir}" || return 1
+    cd "${exampledir}" || return 1
     echo "-- Using ${threads} threads to build"
     cmake --build "${exampledir}" -- -j ${threads} || return 1
     echo "-- Using ${threads} threads to test"
@@ -168,8 +168,8 @@ function call_lcov_init {
 
     local base_output="${basedir}"/lcov_base.info
 
-    lcov ${lcov_options} --no-external --capture --initial --directory "${basedir}" \
-        --output-file ${base_output} || return 1
+    lcov "${lcov_options}" --no-external --capture --initial --directory "${basedir}" \
+        --output-file "${base_output}" || return 1
 }
 
 function call_lcov {
@@ -181,21 +181,21 @@ function call_lcov {
     local base_output="${basedir}"/lcov_base.info
     local test_output="${basedir}"/lcov_test.info
 
-    lcov ${lcov_options} --no-external --capture --directory "${basedir}" \
-        --output-file ${test_output} || return 1
+    lcov "${lcov_options}" --no-external --capture --directory "${basedir}" \
+        --output-file "${test_output}" || return 1
 
-    lcov ${lcov_options} --add-tracefile ${base_output} --add-tracefile ${test_output} \
-        --output-file ${comb_output} || return 1
+    lcov "${lcov_options}" --add-tracefile "${base_output}" --add-tracefile "${test_output}" \
+        --output-file "${comb_output}" || return 1
 
-    lcov ${lcov_options} --remove ${comb_output} '/usr/*' '*/test/*' '*/app/*' '*/build/*' \
-        --output-file ${output} || return 1
+    lcov "${lcov_options}" --remove "${comb_output}" '/usr/*' '*/test/*' '*/app/*' '*/build/*' \
+        --output-file "${output}" || return 1
 
-    rm -f ${base_output} ${test_output} ${comb_output}
+    rm -f "${base_output}" "${test_output}" "${comb_output}"
 
-    lcov ${lcov_options} --list ${output} || return 1
+    lcov "${lcov_options}" --list "${output}" || return 1
 
-    genhtml ${lcov_options} --prefix "${basedir}" --ignore-errors source ${output} --legend --title "libnano" \
-        --output-directory=${html_output} || return 1
+    genhtml "${lcov_options}" --prefix "${basedir}" --ignore-errors source "${output}" --legend --title "libnano" \
+        --output-directory="${html_output}" || return 1
 }
 
 function call_codecov {
@@ -203,7 +203,7 @@ function call_codecov {
 
     local output="${basedir}"/lcov.info
 
-    bash <(curl -s https://codecov.io/bash) -f ${output} || return 1
+    bash <(curl -s https://codecov.io/bash) -f "${output}" || return 1
 }
 
 function call_llvm_cov {
@@ -211,37 +211,38 @@ function call_llvm_cov {
 
     local output="${basedir}"/llvmcov.info
 
+    libs=$(find "${libnanodir}"/src/lib*.so)
     tests=$(find "${libnanodir}"/test/test_* | grep -v profraw | grep -v profdata)
     objects=""
-    for object in $(find "${libnanodir}"/src/lib*.so); do
+    for object in ${libs}; do
         objects="${objects} -object ${object}"
     done
     for utest in ${tests}; do
         objects="${objects} -object ${utest}"
     done
 
-    llvm-profdata merge -sparse $(find "${libnanodir}"/test/*.profraw) -o ${output}
+    llvm-profdata merge -sparse "$(find "${libnanodir}"/test/*.profraw)" -o "${output}"
 
     llvm-cov show \
-        -instr-profile=${output} \
-        -ignore-filename-regex=test\/ \
+        -instr-profile="${output}" \
+        -ignore-filename-regex=test/ \
         -format=html -Xdemangler=c++filt -tab-size=4 \
         -show-line-counts --show-branches=count --show-expansions --show-instantiation-summary \
         -output-dir llvmcovhtml \
-        ${objects}
+        "${objects}"
 
     llvm-cov report \
-        -instr-profile=${output} \
-        -ignore-filename-regex=test\/ \
+        -instr-profile="${output}" \
+        -ignore-filename-regex=test/ \
         -show-branch-summary --show-instantiation-summary \
-        ${objects}
+        "${objects}"
 
     llvm-cov show \
-        -instr-profile=${output} \
-        -ignore-filename-regex=test\/ \
+        -instr-profile="${output}" \
+        -ignore-filename-regex=test/ \
         -format=text -Xdemangler=c++filt -tab-size=4 \
         -show-line-counts --show-branches=count --show-expansions --show-instantiation-summary \
-        ${objects} > "${basedir}"/llvmcov.text
+        "${objects}" > "${basedir}"/llvmcov.text
 }
 
 function call_memcheck {
@@ -257,15 +258,10 @@ function call_helgrind {
     utests="test/test_core_parallel"
     for utest in ${utests}
     do
-        printf "Running helgrind@%s ...\n" ${utest}
+        printf "Running helgrind@%s ...\n" "${utest}"
         log=helgrind_${utest/test\//}.log
-        valgrind --tool=helgrind \
-            --error-exitcode=1 \
-            --log-file=${log} ${utest}
-
-        if [[ $? -ne 0 ]]
-        then
-            cat ${log}
+        if ! valgrind --tool=helgrind --error-exitcode=1 --log-file="${log}" "${utest}"; then
+            cat "${log}"
             # NB: ignore for now the warnings reported by helgrind!
             returncode=1
         fi
@@ -285,23 +281,22 @@ function call_clang_tidy {
     echo "-- Logging to ${log}"
 
     wrapper=run-clang-tidy${clang_suffix}
-    wrapper=$(which ${wrapper} || which ${wrapper}.py || which /usr/share/clang/${wrapper}.py)
-    echo "-- Using wrapper ${wrapper}"
-    ${wrapper} -p "${libnanodir}" -clang-tidy-binary clang-tidy${clang_suffix} \
-        -header-filter=.* -checks=-*,${check} -quiet -j ${threads} > $log 2>&1
+    wrapper=$(which "${wrapper}" || which "${wrapper}".py || which /usr/share/clang/"${wrapper}".py)
 
-    if [[ $? -ne 0 ]]; then
-        cat ${log}
+    echo "-- Using wrapper ${wrapper}"
+    if ! ${wrapper} -p "${libnanodir}" -clang-tidy-binary clang-tidy"${clang_suffix}" \
+        -header-filter=.* -checks=-*,"${check}" -quiet -j ${threads} > "$log" 2>&1; then
+        cat "${log}"
         return 1
     fi
 
-    cat $log | grep -E "warning:|error:" | grep -oE "[^ ]+$" | sort | uniq -c
+    grep -E "warning:|error:" < "$log" | grep -oE "[^ ]+$" | sort | uniq -c
 
     # show log only if any warning or error is detected
-    warnings=$(cat $log | grep -E "warning:|error:" | sort -u | grep -v /usr/include | wc -l)
+    warnings=$(grep -E "warning:|error:" < "$log" | sort -u | grep -c -v /usr/include)
     if [[ $warnings -gt 0 ]]
     then
-        grep -E ".*warning:|error:" $log | sort -u
+        grep -E ".*warning:|error:" "$log" | sort -u
     fi
 
     # decide if should exit with failure
@@ -322,7 +317,7 @@ function call_clang_tidy_concurrency {
 function call_clang_tidy_misc {
     checks="misc*"
     checks="${checks},-misc-non-private-member-variables-in-classes,-misc-include-cleaner"
-    call_clang_tidy ${checks}
+    call_clang_tidy "${checks}"
 }
 
 function call_clang_tidy_cert {
@@ -335,13 +330,13 @@ function call_clang_tidy_hicpp {
     checks="${checks},-hicpp-no-array-decay"
     checks="${checks},-hicpp-signed-bitwise"
     checks="${checks},-hicpp-named-parameter"
-    call_clang_tidy ${checks}
+    call_clang_tidy "${checks}"
 }
 
 function call_clang_tidy_bugprone {
     checks="bugprone*"
     checks="${checks},-bugprone-easily-swappable-parameters"
-    call_clang_tidy ${checks}
+    call_clang_tidy "${checks}"
 }
 
 function call_clang_tidy_modernize {
@@ -349,7 +344,7 @@ function call_clang_tidy_modernize {
     checks="${checks},-modernize-avoid-c-arrays"
     checks="${checks},-modernize-use-trailing-return-type"
     checks="${checks},-modernize-use-nodiscard"
-    call_clang_tidy ${checks}
+    call_clang_tidy "${checks}"
 }
 
 function call_clang_tidy_performance {
@@ -370,7 +365,7 @@ function call_clang_tidy_readability {
     checks="${checks},-readability-identifier-length"
     checks="${checks},-readability-redundant-member-init"
     checks="${checks},-readability-avoid-nested-conditional-operator"
-    call_clang_tidy ${checks}
+    call_clang_tidy "${checks}"
 }
 
 function call_clang_tidy_clang_analyzer {
@@ -384,7 +379,7 @@ function call_clang_tidy_cppcoreguidelines {
     checks="${checks},-cppcoreguidelines-pro-bounds-pointer-arithmetic"
     checks="${checks},-cppcoreguidelines-pro-bounds-array-to-pointer-decay"
     checks="${checks},-cppcoreguidelines-avoid-const-or-ref-data-members"
-    call_clang_tidy ${checks}
+    call_clang_tidy "${checks}"
 }
 
 function call_clang_tidy_all {
@@ -414,19 +409,19 @@ function call_clang_format {
     echo "-- Using ${cmd}..."
 
     log="${basedir}"/clang_format.log
-    rm -f ${log}
+    rm -f "${log}"
 
     for file in ${files}; do
-        ${cmd} --dry-run ${file} >> ${log} 2>&1
+        ${cmd} --dry-run "${file}" >> "${log}" 2>&1
     done
 
-    cat ${log}
+    cat "${log}"
 
-    changes=$(cat ${log} | wc -l)
-    rm -f ${log}
+    changes=$(wc -l < "$log")
+    rm -f "${log}"
 
     for file in ${files}; do
-        ${cmd} -i ${file}
+        "${cmd}" -i "${file}"
     done
 
     if [[ ${changes} -gt 0 ]]; then
@@ -440,17 +435,17 @@ function call_sonar {
     cd "${basedir}" || return 1
 
     export SONAR_SCANNER_VERSION=7.3.0.5189
-    export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux-x64
-    curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip \
+    export SONAR_SCANNER_HOME="$HOME"/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux-x64
+    curl --create-dirs -sSLo "$HOME"/.sonar/sonar-scanner.zip \
         https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux-x64.zip
-    unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
+    unzip -o "$HOME"/.sonar/sonar-scanner.zip -d "$HOME"/.sonar/
     export PATH=$SONAR_SCANNER_HOME/bin:$PATH
     export SONAR_SCANNER_OPTS="-server"
 
-    curl --create-dirs -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip \
+    curl --create-dirs -sSLo "$HOME"/.sonar/build-wrapper-linux-x86.zip \
         https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
-    unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/
-    export PATH=$HOME/.sonar/build-wrapper-linux-x86:$PATH
+    unzip -o "$HOME"/.sonar/build-wrapper-linux-x86.zip -d "$HOME"/.sonar/
+    export PATH="$HOME"/.sonar/build-wrapper-linux-x86:$PATH
 
     sonar-scanner \
         -Dsonar.organization=accosmin \
@@ -470,7 +465,7 @@ function call_shellcheck {
     scripts=$(find . -type f -name "*.sh")
     for script in ${scripts}; do
         echo "-- Checking bash script: ${script}"
-        shellcheck ${script} || return 1
+        shellcheck "${script}" || return 1
     done
 }
 
@@ -481,9 +476,9 @@ function check_source_files {
 
     # NB: the headers in the public interface should include only files
     # from external libraries and own public interface.
-    filenames=`find include/nano -type f -name "*.h"`
+    filenames=$(find include/nano -type f -name "*.h")
     for filename in ${filenames}; do
-        includes=`grep "#include <nano" ${filename} | cut -d ' ' -f 2`
+        includes=$(grep "#include <nano" "${filename}" | cut -d ' ' -f 2)
         for include in ${includes}; do
             include=${include/</}
             include=${include/>/}
@@ -497,11 +492,11 @@ function check_source_files {
     done
 
     # NB: the interface header files should be included exactly once in the CMakeLists.txt!
-    filenames=`find include -type f -name "*.cpp" -o -name "*.h"`
+    filenames=$(find include -type f -name "*.cpp" -o -name "*.h")
     for filename in ${filenames}; do
-        count=`find src -type f -name CMakeLists.txt | xargs grep \${CMAKE_SOURCE_DIR}${filename/\./\\\.} | wc -l`
+        count=$(find src -type f -name CMakeLists.txt -exec grep "${filename/\./\\\.}" {} \; | wc -l)
 
-        if [ ! ${count} = 1 ]; then
+        if [ ! "${count}" = 1 ]; then
             echo -n "-- Error: found library interface '${filename}' "
             echo "which should be referenced exactly once in 'src/CMakeLists.txt', got ${count} times instead!"
             returncode=1
@@ -509,11 +504,11 @@ function check_source_files {
     done
 
     # NB: the implementation files should be included exactly once in the CMakeLists.txt!
-    filenames=`find src -type f -name "*.cpp" -o -name "*.h"`
+    filenames=$(find src -type f -name "*.cpp" -o -name "*.h")
     for filename in ${filenames}; do
-        count=$(grep `basename ${filename}` `dirname ${filename}`/CMakeLists.txt | wc -l)
+        count=$(grep -c "$(basename "${filename}")" "$(dirname "${filename}")"/CMakeLists.txt)
 
-        if [ ${count} = 0 ]; then
+        if [ "${count}" = 0 ]; then
             echo -n "-- Error: found source '${filename}' "
             echo "which should be referenced exactly once in 'src/*/CMakeLists.txt', got ${count} times instead!"
             returncode=1
@@ -521,12 +516,12 @@ function check_source_files {
     done
 
     # NB: the test source files should be included exactly once in the CMakeLists.txt!
-    filenames=`find test -type f -name "*.cpp"`
+    filenames=$(find test -type f -name "*.cpp")
     for filename in ${filenames}; do
         filename=${filename/test\//}
         filename=${filename/\.cpp/}
-        count=`grep make_test\(${filename}\ NANO "${basedir}"/test/CMakeLists.txt | wc -l`
-        if [ ! ${count} = 1 ]; then
+        count=$(grep -c make_test\("${filename}"\ NANO "${basedir}"/test/CMakeLists.txt)
+        if [ ! "${count}" = 1 ]; then
             echo -n "-- Error: found test '${filename}' "
             echo "which should be referenced exactly once in 'test/CMakeLists.txt', got ${count} times instead!"
             returncode=1
@@ -541,21 +536,21 @@ function check_markdown_docs {
 
     returncode=0
 
-    docfiles=`find "${basedir}" -type f -name "*.md"`
+    docfiles=$(find "${basedir}" -type f -name "*.md")
     for docfile in ${docfiles}; do
         echo "-- Checking documentation file: ${docfile}"
 
         # check local links [linkname](filename) that point to existing files
-        lines=`grep -E "\[.+\]\(.+\)" ${docfile} | grep -v "http"`
+        lines=$(grep -E "\[.+\]\(.+\)" "${docfile}" | grep -v "http")
         while read -r line; do
             for token in ${line}; do
-                filename=`echo ${token} | grep -oP "\]\(.+\)"`
+                filename=$(echo "${token}" | grep -oP "\]\(.+\)")
                 if [ -n "${filename}" ]; then
                     filename=${filename//\]/}
                     filename=${filename//\(/}
                     filename=${filename//\)/}
-                    filename=`dirname ${docfile}`/${filename}
-                    if [ ! -d ${filename} ] && [ ! -f ${filename} ]; then
+                    filename="$(dirname "${docfile}")"/"${filename}"
+                    if [ ! -d "${filename}" ] && [ ! -f "${filename}" ]; then
                         echo "-- Error: invalid reference path '${filename}'!"
                         returncode=1
                     fi
@@ -564,15 +559,15 @@ function check_markdown_docs {
         done <<< "${lines}"
 
         # check example codes with C++ includes that point to existing files
-        lines=`grep -E "#include <.+>" ${docfile}`
+        lines=$(grep -E "#include <.+>" "${docfile}")
         while read -r line; do
             for token in ${line}; do
-                filename=`echo ${token} | grep -oP "\<.+\>" | grep -v "<iostream>"`
+                filename=$(echo "${token}" | grep -oP "\<.+\>" | grep -v "<iostream>")
                 if [ -n "${filename}" ]; then
                     filename=${filename//\</}
                     filename=${filename//\>/}
                     filename=include/${filename}
-                    if [ ! -f ${filename} ]; then
+                    if [ ! -f "${filename}" ]; then
                         echo "-- Error: invalid C++ include '${filename}'!"
                         returncode=1
                     fi
@@ -734,8 +729,8 @@ while [ "$1" != "" ]; do
         --shellcheck)                   call_shellcheck || exit 1;;
         --check-markdown-docs)          check_markdown_docs || exit 1;;
         --check-source-files)           check_source_files || exit 1;;
-        -D*)                            cmake_options="${cmake_options} $1";;
-        -G*)                            cmake_options="${cmake_options} $1";;
+        -D*)                            cmake_options+=("$1");;
+        -G*)                            cmake_options+=("$1");;
         *)                              echo "unrecognized option $1"; echo; usage;;
     esac
     shift
