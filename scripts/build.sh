@@ -155,20 +155,19 @@ function call_cppcheck {
         --suppress=unmatchedSuppression
 }
 
-lcov_options="
+lcov_options=(
     --ignore-errors unused
     --ignore-errors mismatch
     --rc lcov_branch_coverage=1
     --rc genhtml_dark_mode=1
-    --rc genhtml_branch_coverage=1
-    "
+    --rc genhtml_branch_coverage=1)
 
 function call_lcov_init {
     cd "${basedir}" || return 1
 
     local base_output="${basedir}"/lcov_base.info
 
-    lcov "${lcov_options}" --no-external --capture --initial --directory "${basedir}" \
+    lcov "${lcov_options[@]}" --no-external --capture --initial --directory "${basedir}" \
         --output-file "${base_output}" || return 1
 }
 
@@ -181,20 +180,20 @@ function call_lcov {
     local base_output="${basedir}"/lcov_base.info
     local test_output="${basedir}"/lcov_test.info
 
-    lcov "${lcov_options}" --no-external --capture --directory "${basedir}" \
+    lcov "${lcov_options[@]}" --no-external --capture --directory "${basedir}" \
         --output-file "${test_output}" || return 1
 
-    lcov "${lcov_options}" --add-tracefile "${base_output}" --add-tracefile "${test_output}" \
+    lcov "${lcov_options[@]}" --add-tracefile "${base_output}" --add-tracefile "${test_output}" \
         --output-file "${comb_output}" || return 1
 
-    lcov "${lcov_options}" --remove "${comb_output}" '/usr/*' '*/test/*' '*/app/*' '*/build/*' \
+    lcov "${lcov_options[@]}" --remove "${comb_output}" '/usr/*' '*/test/*' '*/app/*' '*/build/*' \
         --output-file "${output}" || return 1
 
     rm -f "${base_output}" "${test_output}" "${comb_output}"
 
-    lcov "${lcov_options}" --list "${output}" || return 1
+    lcov "${lcov_options[@]}" --list "${output}" || return 1
 
-    genhtml "${lcov_options}" --prefix "${basedir}" --ignore-errors source "${output}" --legend --title "libnano" \
+    genhtml "${lcov_options[@]}" --prefix "${basedir}" --ignore-errors source "${output}" --legend --title "libnano" \
         --output-directory="${html_output}" || return 1
 }
 
@@ -213,15 +212,18 @@ function call_llvm_cov {
 
     libs=$(find "${libnanodir}"/src/lib*.so)
     tests=$(find "${libnanodir}"/test/test_* | grep -v profraw | grep -v profdata)
-    objects=""
+
+    objects=()
     for object in ${libs}; do
-        objects="${objects} -object ${object}"
+        objects+=(-object "${object}")
     done
     for utest in ${tests}; do
-        objects="${objects} -object ${utest}"
+        objects+=(-object "${utest}")
     done
 
-    llvm-profdata merge -sparse "$(find "${libnanodir}"/test/*.profraw)" -o "${output}"
+    readarray -d '' profraws < <(find "${libnanodir}"/test/*.profraw -print0)
+
+    llvm-profdata merge -sparse "${profraws[@]}" -o "${output}"
 
     llvm-cov show \
         -instr-profile="${output}" \
@@ -229,20 +231,20 @@ function call_llvm_cov {
         -format=html -Xdemangler=c++filt -tab-size=4 \
         -show-line-counts --show-branches=count --show-expansions --show-instantiation-summary \
         -output-dir llvmcovhtml \
-        "${objects}"
+        "${objects[@]}"
 
     llvm-cov report \
         -instr-profile="${output}" \
         -ignore-filename-regex=test/ \
         -show-branch-summary --show-instantiation-summary \
-        "${objects}"
+        "${objects[@]}"
 
     llvm-cov show \
         -instr-profile="${output}" \
         -ignore-filename-regex=test/ \
         -format=text -Xdemangler=c++filt -tab-size=4 \
         -show-line-counts --show-branches=count --show-expansions --show-instantiation-summary \
-        "${objects}" > "${basedir}"/llvmcov.text
+        "${objects[@]}" > "${basedir}"/llvmcov.text
 }
 
 function call_memcheck {
