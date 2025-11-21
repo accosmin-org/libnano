@@ -458,6 +458,7 @@ function call_sonar {
         -Dsonar.cfamily.compile-commands="${libnanodir}"/compile_commands.json \
         -Dsonar.cfamily.llvm-cov.reportPath="${basedir}"/llvmcov.text \
         -Dsonar.sourceEncoding=UTF-8 \
+        -Dsonar.qualitygate.wait=true \
         -Dsonar.host.url=https://sonarcloud.io
 }
 
