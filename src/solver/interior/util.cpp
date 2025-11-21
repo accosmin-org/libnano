@@ -28,15 +28,6 @@ void scale(const scalar_t row_norm, const scalar_t tau, scalar_t& current_scale)
 }
 } // namespace
 
-scalar_t nano::make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& G, const vector_t& h)
-{
-    assert(x.size() == dx.size());
-    assert(x.size() == G.cols());
-    assert(h.size() == G.rows());
-
-    return make_umax(h - G * x, -G * dx);
-}
-
 void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G, vector_t& h,
                                        vector_t& dA, matrix_t& A, vector_t& b, const scalar_t tau,
                                        const scalar_t tolerance)

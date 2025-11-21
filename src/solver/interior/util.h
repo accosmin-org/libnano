@@ -5,16 +5,16 @@
 namespace nano
 {
 ///
-/// \brief return the maximum scalar factor `step` so that `u + step * du > beta * u` element-wise.
+/// \brief return the maximum scalar factor `step` so that `u + step * du > (1 - tau) * u` element-wise.
 ///
 /// NB: it is assumed that the vector `u` is strictly positive element-wise.
 ///
 template <class tvectoru, class tvectordu>
 requires((is_tensor_v<tvectoru> || is_eigen_v<tvectoru>) && (is_tensor_v<tvectordu> || is_eigen_v<tvectordu>))
-scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t beta = 1e-8)
+scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau)
 {
-    assert(beta > 0.0);
-    assert(beta < 1.0);
+    assert(tau > 0.0);
+    assert(tau < 1.0);
     assert(u.size() == du.size());
     assert(u.array().minCoeff() > 0.0);
 
@@ -23,19 +23,12 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t beta =
     {
         if (du(i) < 0.0)
         {
-            step = std::min(step, -(1.0 - beta) * u(i) / du(i));
+            step = std::min(step, -tau * u(i) / du(i));
         }
     }
 
     return std::min(step, 1.0);
 }
-
-///
-/// \brief return the maximum scalar factor `step` so that `G * (x + step * dx) <= h` element-wise.
-///
-/// NB: it is assumed that the condition `G * x <= h` holds element-wise.
-///
-NANO_PUBLIC scalar_t make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& G, const vector_t& h);
 
 ///
 /// \brief in-place modified Ruiz equilibration of the matrices involved in a linear or quadratic program:

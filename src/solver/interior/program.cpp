@@ -143,20 +143,20 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
     // initialize: see (2), p. 613, u = -1 / (G * x - h) = 1 / y
     m_x.segment(0, n)         = x0.vector();
-    m_x.segment(n, m).array() = (m_h - m_G * x0).array().abs().max(1.0);
-    m_u.array()               = 1.0 / m_x.segment(n, m).array();
+    m_x.segment(n, m).array() = (m_h - m_G * x0).array().abs().max(10.0);
+    m_u.array()               = 10.0 / m_x.segment(n, m).array();
 
     update_original();
     update_residual();
 
-    // move towards the center of the feasibility set to improve convergence: see (1), p. 485
+    /*// move towards the center of the feasibility set to improve convergence: see (1), p. 485
     solve();
 
     m_x.segment(n, m).array() = (m_x.segment(n, m).array() + m_dx.segment(n, m).array()).abs().max(1.0);
     m_u.array()               = (m_u.array() + m_du.array()).abs().max(1.0);
 
     update_original();
-    update_residual();
+    update_residual();*/
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -208,7 +208,7 @@ program_t::solve_stats_t program_t::solve()
     return stats;
 }
 
-program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger_t& logger)
+program_t::lsearch_stats_t program_t::lsearch(const scalar_t tau, const logger_t& logger)
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -226,8 +226,9 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
     const auto dv = m_dv.segment(0, p);
     const auto dw = m_dv.segment(p, m);
 
-    const auto max_dstep = (m == 0) ? step0 : (step0 * make_umax(u, du));
-    const auto max_pstep = (m == 0) ? step0 : (step0 * make_umax(y, dy));
+    const auto max_dstep = (m == 0) ? tau : make_umax(u, du, tau);
+    const auto max_pstep = (m == 0) ? tau : make_umax(y, dy, tau);
+    const auto max_step  = std::min(max_dstep, max_pstep);
 
     const auto make_residual = [&](const scalar_t xstep, const scalar_t ystep, const scalar_t ustep,
                                    const scalar_t vstep, const scalar_t wstep) -> scalar_t
@@ -269,12 +270,12 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
     const auto beta      = 0.9;
     const auto alpha     = 1e-6;
 
-    auto stepX     = step0;
-    auto xstep     = max_pstep;
-    auto ystep     = max_pstep;
-    auto ustep     = max_dstep;
-    auto vstep     = max_dstep;
-    auto wstep     = max_dstep;
+    auto stepX     = max_step;
+    auto xstep     = max_step;
+    auto ystep     = max_step;
+    auto ustep     = max_step;
+    auto vstep     = max_step;
+    auto wstep     = max_step;
     auto residualX = residual0;
 
     for (auto iter = 0; iter < max_iters; ++iter)

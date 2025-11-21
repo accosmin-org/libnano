@@ -92,7 +92,7 @@ public:
         bool     m_success{false};
     };
 
-    lsearch_stats_t lsearch(scalar_t step0, const logger_t& logger);
+    lsearch_stats_t lsearch(scalar_t tau, const logger_t& logger);
 
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scalar_t miu);
