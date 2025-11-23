@@ -21,7 +21,7 @@ UTEST_BEGIN_MODULE()
 
 UTEST_CASE(nonsmooth)
 {
-    check_minimize(make_solver_ids(), function_t::make({4, 4, function_type::convex}));
+    check_minimize(make_solver_ids(), function_t::make({4, 4, function_type::convex_nonsmooth}));
 }*/
 
 UTEST_END_MODULE()

@@ -18,7 +18,7 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau)
     assert(u.size() == du.size());
     assert(u.array().minCoeff() > 0.0);
 
-    auto step = std::numeric_limits<scalar_t>::max();
+    auto step = 1.0;
     for (tensor_size_t i = 0, size = u.size(); i < size; ++i)
     {
         if (du(i) < 0.0)
@@ -27,7 +27,7 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau)
         }
     }
 
-    return std::min(step, 1.0);
+    return step;
 }
 
 ///

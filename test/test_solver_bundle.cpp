@@ -25,9 +25,9 @@ UTEST_CASE(smooth_bundle)
     check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex_smooth}));
 }
 
-/*UTEST_CASE(nonsmooth_bundle)
+UTEST_CASE(nonsmooth_bundle)
 {
-    check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex}));
-}*/
+    check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex_nonsmooth}));
+}
 
 UTEST_END_MODULE()

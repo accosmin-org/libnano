@@ -143,20 +143,20 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
     // initialize: see (2), p. 613, u = -1 / (G * x - h) = 1 / y
     m_x.segment(0, n)         = x0.vector();
-    m_x.segment(n, m).array() = (m_h - m_G * x0).array().abs().max(10.0);
-    m_u.array()               = 10.0 / m_x.segment(n, m).array();
+    m_x.segment(n, m).array() = (m_h - m_G * x0).array().abs().max(1.0);
+    m_u.array()               = 1 / m_x.segment(n, m).array();
+
+    update_original();
+    update_residual(false);
+
+    // move towards the center of the feasibility set to improve convergence: see (1), p. 485
+    solve();
+
+    m_x.segment(n, m).array() = (m_x.segment(n, m).array() + m_dx.segment(n, m).array()).abs().max(10.0);
+    m_u.array()               = (m_u.array() + m_du.array()).abs().max(10.0);
 
     update_original();
     update_residual();
-
-    /*// move towards the center of the feasibility set to improve convergence: see (1), p. 485
-    solve();
-
-    m_x.segment(n, m).array() = (m_x.segment(n, m).array() + m_dx.segment(n, m).array()).abs().max(1.0);
-    m_u.array()               = (m_u.array() + m_du.array()).abs().max(1.0);
-
-    update_original();
-    update_residual();*/
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -319,7 +319,7 @@ void program_t::update_original()
     m_orig_v.array() = m_dA.array() * m_v.segment(0, p).array();
 }
 
-void program_t::update_residual()
+void program_t::update_residual(const bool with_miu)
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -355,6 +355,13 @@ void program_t::update_residual()
         assert(y.minCoeff() > 0);
         assert(u.minCoeff() > 0);
 
-        m_rcent.array() = u.array() * y.array() - y.dot(u) / (m_miu * static_cast<scalar_t>(m));
+        if (with_miu)
+        {
+            m_rcent.array() = u.array() * y.array() - y.dot(u) / (m_miu * static_cast<scalar_t>(m));
+        }
+        else
+        {
+            m_rcent.array() = u.array() * y.array();
+        }
     }
 }

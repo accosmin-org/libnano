@@ -98,7 +98,7 @@ private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scalar_t miu);
 
     void update_original();
-    void update_residual();
+    void update_residual(bool with_miu = true);
 
     tensor_size_t n() const { return m_c.size(); }
 

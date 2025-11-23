@@ -158,7 +158,7 @@ scalar_t solver_state_t::gradient_test() const
 
 scalar_t solver_state_t::gradient_test(const vector_cmap_t gx) const
 {
-    return gx.lpNorm<Eigen::Infinity>() / std::max(scalar_t(1), std::fabs(m_fx));
+    return gx.lpNorm<Eigen::Infinity>() / std::max(1.0, std::fabs(m_fx));
 }
 
 bool solver_state_t::valid() const
@@ -198,7 +198,7 @@ bool solver_state_t::has_strong_wolfe(const solver_state_t& origin, const vector
 bool solver_state_t::has_approx_wolfe(const solver_state_t& origin, const vector_t& descent, const scalar_t c1,
                                       const scalar_t c2) const
 {
-    assert(0 < c1 && c1 < scalar_t(0.5) && c1 < c2 && c2 < 1);
+    assert(0 < c1 && c1 < 0.5 && c1 < c2 && c2 < 1.0);
 
     return (2.0 * c1 - 1.0) * origin.dg(descent) >= dg(descent) && dg(descent) >= c2 * origin.dg(descent);
 }
