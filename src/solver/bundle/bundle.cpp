@@ -124,6 +124,9 @@ const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_
     const auto bundleH = m_bundleH.slice(0, m);
     const auto bundleF = -bundleH.array();
 
+    assert(m_bundleG.slice(0, size()).all_finite());
+    assert(m_bundleH.slice(0, size()).all_finite());
+
     // add constraints
     m_program.clear_constraints();
     critical(bundleG * m_program.variable() <= bundleF);
@@ -242,6 +245,9 @@ void bundle_t::append_aggregate()
 
 void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy, const bool serious_step)
 {
+    assert(y.all_finite());
+    assert(gy.all_finite());
+    assert(std::isfinite(fy));
     assert(dims() == y.size());
     assert(dims() == gy.size());
 
@@ -264,6 +270,8 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     ++m_bsize;
 
     assert(m_bsize < capacity());
+    assert(m_bundleG.slice(0, size()).all_finite());
+    assert(m_bundleH.slice(0, size()).all_finite());
 }
 
 void bundle_t::config(configurable_t& c, const string_t& prefix)

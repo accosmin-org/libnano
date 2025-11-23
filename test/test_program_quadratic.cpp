@@ -262,10 +262,24 @@ UTEST_CASE(bundle_cases_with_level)
     const auto h2 = make_vector<scalar_t>(-13.15910824050277);
     const auto w2 = make_vector<scalar_t>(0, 0, 0, 0, 1);
     const auto l2 = 20.5;
+
+    const auto Q3 = make_matrix<scalar_t>(5,
+        1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0);
+    const auto c3 = make_vector<scalar_t>(0, 0, 0, 0, 1);
+    const auto G3 = make_matrix<scalar_t>(1,
+        5911.054370218572, 2029.910659278819, 1956.336168695624, 7424.608906364497, -1);
+    const auto h3 = make_vector<scalar_t>(-4900.490855535085);
+    const auto w3 = make_vector<scalar_t>(0, 0, 0, 0, 1);
+    const auto l3 = 900.0981711070167;
     // clang-format on
 
     for (const auto& [Q, c, G, h, w, l] :
-         {std::make_tuple(Q1, c1, G1, h1, w1, l1), std::make_tuple(Q2, c2, G2, h2, w2, l2)})
+         {std::make_tuple(Q1, c1, G1, h1, w1, l1), std::make_tuple(Q2, c2, G2, h2, w2, l2),
+          std::make_tuple(Q3, c3, G3, h3, w3, l3)})
     {
         static auto index    = 0;
         auto        function = quadratic_program_t{scat("qp-bundle-level-case", index++), Q, c};
