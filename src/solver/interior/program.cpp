@@ -174,27 +174,37 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
     auto stats = stats_t{};
 
-    // predictor step
-    update_residual(0.0);
+    if (m > 0)
+    {
+        // predictor step
+        update_residual(0.0);
 
-    stats.m_predictor_stats = solve();
+        stats.m_predictor_stats = solve();
 
-    const auto alpha_affine = std::min(make_umax(u, du, 1e-12), make_umax(y, dy, 1e-12));
+        const auto alpha_affine = std::min(make_umax(u, du, 1e-12), make_umax(y, dy, 1e-12));
+        const auto miu          = y.dot(u);
+        const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
 
-    const auto miu        = y.dot(u);
-    const auto miu_affine = (y + alpha_affine * dy).dot(u + alpha_affine * du);
+        // TODO: safeguard sigma within reasonable limits
+        // TODO: configurable power
+        stats.m_sigma = std::pow(miu_affine / miu, 3.0);
 
-    // TODO: safeguard sigma within reasonable limits
-    // TODO: configurable power
-    stats.m_sigma = std::pow(miu_affine / miu, 3.0);
+        // corrector step
+        update_residual(stats.m_sigma);
+        m_rcent.array() += dy.array() * du.array();
 
-    // corrector step
-    update_residual(stats.m_sigma);
-    m_rdual.array() += dy.array() * du.array();
+        stats.m_corrector_stats = solve();
+        stats.m_alpha           = std::min(make_umax(u, du, tau), make_umax(y, dy, tau));
+    }
 
-    stats.m_corrector_stats = solve();
+    else
+    {
+        // NB: no inequalities, solve the affine KKT system
+        update_residual(0.0);
 
-    stats.m_alpha = std::min(make_umax(u, du, tau), make_umax(y, dy, tau));
+        stats.m_predictor_stats = solve();
+        stats.m_alpha           = tau;
+    }
 
     // update primal-dual variables
     m_x.segment(0, n) = x + stats.m_alpha * dx;
