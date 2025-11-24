@@ -181,7 +181,7 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
         stats.m_predictor_stats = solve();
 
-        const auto alpha_affine = std::min(make_umax(u, du, 1e-12), make_umax(y, dy, 1e-12));
+        const auto alpha_affine = std::min(make_umax(u, du, 1.0 - 1e-15), make_umax(y, dy, 1.0 - 1e-15));
         const auto miu          = y.dot(u);
         const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
 
