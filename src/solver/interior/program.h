@@ -25,7 +25,7 @@ namespace nano
 /// see (2) ch.11 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-/// NB: the implementation follows the notation from (2).
+/// NB: the implementation follows the notation from (3, ch. 16).
 /// NB: the original tensors (Q, c, G, h, A, b) are scaled in-place.
 /// NB: the primal-dual iterate (x, u, v) are also scaled similarly.
 ///
@@ -46,14 +46,14 @@ namespace nano
 ///         G * x - h = -y
 ///
 ///     the primal variables are thus (x, y), while
-///     the dual variables are (u, v for A * x = b, w for G * x + y = h).
+///     the dual variables are (u for -y <= 0, v for A * x = b, w for G * x + y = h).
 ///
 class program_t
 {
 public:
-    program_t(const linear_program_t&, linear_constraints_t, const vector_t& x0, scalar_t miu);
+    program_t(const linear_program_t&, linear_constraints_t, const vector_t& x0);
 
-    program_t(const quadratic_program_t&, linear_constraints_t, const vector_t& x0, scalar_t miu);
+    program_t(const quadratic_program_t&, linear_constraints_t, const vector_t& x0);
 
     const vector_t& original_x() const { return m_orig_x; }
 
@@ -64,9 +64,10 @@ public:
     const function_t& function() const { return m_function; }
 
     ///
-    /// \brief compute the state update (dx, dy, du, dv, dw) by solving the KKT linear system.
+    /// \brief update the primal-dual variables (x, y, u, v, w) following
+    ///     the predictor-corrector algorithm 16.4 from (3).
     ///
-    struct solve_stats_t
+    struct kkt_stats_t
     {
         scalar_t m_precision{0.0};  ///< precision with which the linear system of equations was solved
         scalar_t m_rcond{0.0};      ///< estimation of the reciprocal condition of the matrix to decompose
@@ -75,30 +76,24 @@ public:
         bool     m_negative{false}; ///< is the original matrix negative semidefinite?
     };
 
-    solve_stats_t solve();
-
-    ///
-    /// \brief compute the step lengths for the primal-dual updates and change the current state accordingly
-    ///     (x + xstep * dx, y + ystep * dy, u + ustep * du, v + vstep * dv, w + wstep * dw).
-    ///
-    struct lsearch_stats_t
+    struct stats_t
     {
-        scalar_t m_xstep{0.0};
-        scalar_t m_ystep{0.0};
-        scalar_t m_ustep{0.0};
-        scalar_t m_vstep{0.0};
-        scalar_t m_wstep{0.0};
-        scalar_t m_residual{0.0};
-        bool     m_success{false};
+        scalar_t    m_alpha{0.0};      ///< step length
+        scalar_t    m_sigma{0.0};      ///< centering parameter
+        scalar_t    m_residual{0.0};   ///< residual (primal, dual, centering)
+        kkt_stats_t m_predictor_stats; ///< statistics for solving the KKT system (predictor step)
+        kkt_stats_t m_corrector_stats; ///< statistics for solving the KKT system (corrector step)
     };
 
-    lsearch_stats_t lsearch(scalar_t tau, const logger_t& logger);
+    stats_t update(scalar_t tau);
 
 private:
-    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scalar_t miu);
+    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0);
+
+    kkt_stats_t solve();
 
     void update_original();
-    void update_residual(bool with_miu = true);
+    void update_residual(scalar_t sigma);
 
     tensor_size_t n() const { return m_c.size(); }
 
@@ -132,6 +127,5 @@ private:
     matrix_t          m_lmat;     ///< reduced KKT system: lmat * lsol = lvec
     vector_t          m_lvec;     ///<
     vector_t          m_lsol;     ///<
-    scalar_t          m_miu{1.0}; ///<
 };
 } // namespace nano

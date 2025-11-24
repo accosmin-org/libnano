@@ -77,24 +77,22 @@ auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
     const auto positive = solver.isPositive();
     const auto negative = solver.isNegative();
 
-    return program_t::solve_stats_t{delta, rcond, valid, positive, negative};
+    return program_t::kkt_stats_t{delta, rcond, valid, positive, negative};
 }
 } // namespace
 
-program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const vector_t& x0,
-                     const scalar_t miu)
-    : program_t(program, matrix_t{}, program.c(), std::move(constraints), x0, miu)
+program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const vector_t& x0)
+    : program_t(program, matrix_t{}, program.c(), std::move(constraints), x0)
 {
 }
 
-program_t::program_t(const quadratic_program_t& program, linear_constraints_t constraints, const vector_t& x0,
-                     const scalar_t miu)
-    : program_t(program, program.Q(), program.c(), std::move(constraints), x0, miu)
+program_t::program_t(const quadratic_program_t& program, linear_constraints_t constraints, const vector_t& x0)
+    : program_t(program, program.Q(), program.c(), std::move(constraints), x0)
 {
 }
 
 program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_constraints_t constraints,
-                     const vector_t& x0, const scalar_t miu)
+                     const vector_t& x0)
     : m_function(function)
     , m_Q(std::move(Q))
     , m_c(std::move(c))
@@ -120,7 +118,6 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_lmat(n() + p(), n() + p())
     , m_lvec(n() + p())
     , m_lsol(n() + p())
-    , m_miu(miu)
 {
     [[maybe_unused]] const auto n = this->n();
     [[maybe_unused]] const auto m = this->m();
@@ -146,20 +143,76 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     m_x.segment(n, m).array() = (m_h - m_G * x0).array().abs().max(1.0);
     m_u.array()               = 1 / m_x.segment(n, m).array();
 
-    update_original();
-    update_residual(false);
-
     // move towards the center of the feasibility set to improve convergence: see (1), p. 485
+    update_residual(0.0);
+
     solve();
 
-    m_x.segment(n, m).array() = (m_x.segment(n, m).array() + m_dx.segment(n, m).array()).abs().max(10.0);
-    m_u.array()               = (m_u.array() + m_du.array()).abs().max(10.0);
+    m_x.segment(n, m).array() = (m_x.segment(n, m).array() + m_dx.segment(n, m).array()).abs().max(1.0);
+    m_u.array()               = (m_u.array() + m_du.array()).abs().max(1.0);
 
     update_original();
-    update_residual();
 }
 
-program_t::solve_stats_t program_t::solve()
+program_t::stats_t program_t::update(const scalar_t tau)
+{
+    const auto n = this->n();
+    const auto m = this->m();
+    const auto p = this->p();
+
+    const auto x = m_x.segment(0, n);
+    const auto y = m_x.segment(n, m);
+    const auto u = m_u.segment(0, m);
+    const auto v = m_v.segment(0, p);
+    const auto w = m_v.segment(p, m);
+
+    const auto dx = m_dx.segment(0, n);
+    const auto dy = m_dx.segment(n, m);
+    const auto du = m_du.segment(0, m);
+    const auto dv = m_dv.segment(0, p);
+    const auto dw = m_dv.segment(p, m);
+
+    auto stats = stats_t{};
+
+    // predictor step
+    update_residual(0.0);
+
+    stats.m_predictor_stats = solve();
+
+    const auto alpha_affine = std::min(make_umax(u, du, 1e-12), make_umax(y, dy, 1e-12));
+
+    const auto miu        = y.dot(u);
+    const auto miu_affine = (y + alpha_affine * dy).dot(u + alpha_affine * du);
+
+    // TODO: safeguard sigma within reasonable limits
+    // TODO: configurable power
+    stats.m_sigma = std::pow(miu_affine / miu, 3.0);
+
+    // corrector step
+    update_residual(stats.m_sigma);
+    m_rdual.array() += dy.array() * du.array();
+
+    stats.m_corrector_stats = solve();
+
+    stats.m_alpha = std::min(make_umax(u, du, tau), make_umax(y, dy, tau));
+
+    // update primal-dual variables
+    m_x.segment(0, n) = x + stats.m_alpha * dx;
+    m_x.segment(n, m) = y + stats.m_alpha * dy;
+    m_u               = u + stats.m_alpha * du;
+    m_v.segment(0, p) = v + stats.m_alpha * dv;
+    m_v.segment(p, m) = w + stats.m_alpha * dw;
+
+    update_original();
+
+    // compute residual
+    update_residual(0.0);
+    stats.m_residual = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
+
+    return stats;
+}
+
+program_t::kkt_stats_t program_t::solve()
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -208,106 +261,6 @@ program_t::solve_stats_t program_t::solve()
     return stats;
 }
 
-program_t::lsearch_stats_t program_t::lsearch(const scalar_t tau, const logger_t& logger)
-{
-    const auto n = this->n();
-    const auto m = this->m();
-    const auto p = this->p();
-
-    const auto x = m_x.segment(0, n);
-    const auto y = m_x.segment(n, m);
-    const auto u = m_u.segment(0, m);
-    const auto v = m_v.segment(0, p);
-    const auto w = m_v.segment(p, m);
-
-    const auto dx = m_dx.segment(0, n);
-    const auto dy = m_dx.segment(n, m);
-    const auto du = m_du.segment(0, m);
-    const auto dv = m_dv.segment(0, p);
-    const auto dw = m_dv.segment(p, m);
-
-    const auto max_dstep = (m == 0) ? tau : make_umax(u, du, tau);
-    const auto max_pstep = (m == 0) ? tau : make_umax(y, dy, tau);
-    const auto max_step  = std::min(max_dstep, max_pstep);
-
-    const auto make_residual = [&](const scalar_t xstep, const scalar_t ystep, const scalar_t ustep,
-                                   const scalar_t vstep, const scalar_t wstep) -> scalar_t
-    {
-        auto residual = 0.0;
-
-        // dual residual
-        if (m_Q.size() == 0)
-        {
-            m_rdual.segment(0, n).matrix() = m_c.vector();
-        }
-        else
-        {
-            m_rdual.segment(0, n).matrix() = m_Q * (x + xstep * dx) + m_c;
-        }
-        m_rdual.segment(0, n) += m_A.transpose() * (v + vstep * dv);
-        m_rdual.segment(0, n) += m_G.transpose() * (w + wstep * dw);
-        m_rdual.segment(n, m) = (w + wstep * dw) - (u + ustep * du);
-
-        residual += m_rdual.squaredNorm();
-
-        // primal residual
-        m_rprim.segment(0, p) = m_A * (x + xstep * dx) - m_b;
-        m_rprim.segment(p, m) = m_G * (x + xstep * dx) + (y + ystep * dy) - m_h;
-
-        residual += m_rprim.squaredNorm();
-
-        // centering residual
-        if (m > 0)
-        {
-            residual += (y + ystep * dy).dot(u + ustep * du);
-        }
-
-        return residual;
-    };
-
-    const auto residual0 = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
-    const auto max_iters = 100;
-    const auto beta      = 0.9;
-    const auto alpha     = 1e-6;
-
-    auto stepX     = max_step;
-    auto xstep     = max_step;
-    auto ystep     = max_step;
-    auto ustep     = max_step;
-    auto vstep     = max_step;
-    auto wstep     = max_step;
-    auto residualX = residual0;
-
-    for (auto iter = 0; iter < max_iters; ++iter)
-    {
-        residualX = make_residual(xstep, ystep, ustep, vstep, wstep);
-        logger.info("residual=", residual0, " (pstep=", xstep, ",dstep=", ustep, ") -> ", residualX, ".\n");
-
-        if (residualX < (1.0 - stepX * alpha) * residual0)
-        {
-            break;
-        }
-
-        stepX *= beta;
-        xstep *= beta;
-        ystep *= beta;
-        ustep *= beta;
-        vstep *= beta;
-        wstep *= beta;
-    }
-
-    m_x.segment(0, n) = x + xstep * dx;
-    m_x.segment(n, m) = y + ystep * dy;
-    m_u               = u + ustep * du;
-    m_v.segment(0, p) = v + vstep * dv;
-    m_v.segment(p, m) = w + wstep * dw;
-
-    update_original();
-    update_residual();
-
-    return lsearch_stats_t{xstep, ystep, ustep, vstep, wstep, residualX, residualX < residual0};
-}
-
 void program_t::update_original()
 {
     const auto n = this->n();
@@ -319,7 +272,7 @@ void program_t::update_original()
     m_orig_v.array() = m_dA.array() * m_v.segment(0, p).array();
 }
 
-void program_t::update_residual(const bool with_miu)
+void program_t::update_residual(const scalar_t sigma)
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -355,13 +308,6 @@ void program_t::update_residual(const bool with_miu)
         assert(y.minCoeff() > 0);
         assert(u.minCoeff() > 0);
 
-        if (with_miu)
-        {
-            m_rcent.array() = u.array() * y.array() - y.dot(u) / (m_miu * static_cast<scalar_t>(m));
-        }
-        else
-        {
-            m_rcent.array() = u.array() * y.array();
-        }
+        m_rcent.array() = u.array() * y.array() - sigma * y.dot(u) / static_cast<scalar_t>(m);
     }
 }

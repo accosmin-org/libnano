@@ -12,11 +12,11 @@ namespace
 rsolvers_t make_solvers()
 {
     auto solvers = rsolvers_t{};
-    for (const auto miu : {5.0, 10.0, 20.0})
+    for (const auto gamma : {1.0, 2.0, 3.0})
     {
-        auto solver                            = make_solver("ipm");
-        solver->parameter("solver::ipm::miu")  = miu;
-        solver->parameter("solver::max_evals") = 100;
+        auto solver                             = make_solver("ipm");
+        solver->parameter("solver::ipm::gamma") = gamma;
+        solver->parameter("solver::max_evals")  = 100;
         solvers.emplace_back(std::move(solver));
     }
     return solvers;

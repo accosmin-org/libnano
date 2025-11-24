@@ -6,8 +6,7 @@ using namespace nano;
 solver_ipm_t::solver_ipm_t()
     : solver_t("ipm")
 {
-    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.9, LE, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
+    register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::tiny_res", 0.0, LT, 1e-24, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::tiny_kkt", 0.0, LT, 1e-18, LE, 1.0));
@@ -22,8 +21,6 @@ rsolver_t solver_ipm_t::clone() const
 
 solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
-    const auto miu = parameter("solver::ipm::miu").value<scalar_t>();
-
     if (auto lconstraints = make_linear_constraints(function); !lconstraints)
     {
         raise("interior point solver can only solve linearly-constrained functions!");
@@ -32,7 +29,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     // linear programs
     else if (const auto* const lprogram = dynamic_cast<const linear_program_t*>(&function); lprogram)
     {
-        auto program = program_t{*lprogram, std::move(lconstraints.value()), x0, miu};
+        auto program = program_t{*lprogram, std::move(lconstraints.value()), x0};
         return do_minimize(program, logger);
     }
 
@@ -41,7 +38,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     {
         critical(is_convex(qprogram->Q()), "interior point solver can only solve convex quadratic programs!");
 
-        auto program = program_t{*qprogram, std::move(lconstraints.value()), x0, miu};
+        auto program = program_t{*qprogram, std::move(lconstraints.value()), x0};
         return do_minimize(program, logger);
     }
 
@@ -53,7 +50,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
 
 solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& logger) const
 {
-    const auto s0        = parameter("solver::ipm::s0").value<scalar_t>();
+    const auto tau0      = parameter("solver::ipm::tau0").value<scalar_t>();
     const auto gamma     = parameter("solver::ipm::gamma").value<scalar_t>();
     const auto tiny_res  = parameter("solver::ipm::tiny_res").value<scalar_t>();
     const auto tiny_kkt  = parameter("solver::ipm::tiny_kkt").value<scalar_t>();
@@ -67,25 +64,20 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     // primal-dual interior-point solver...
     for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
     {
-        // solve primal-dual linear system of equations to get (dx, dy, du, dv, dw)
-        const auto sstats = program.solve();
-        logger.info("accuracy=", sstats.m_precision, ",rcond=", sstats.m_rcond, ",pos=", sstats.m_positive ? 'y' : 'n',
-                    ",valid=", sstats.m_valid ? 'y' : 'n', ".\n");
-        if (!sstats.m_valid)
-        {
-            logger.error("linear system of equations cannot be solved, invalid state!\n");
-            break;
-        }
+        const auto tau = 1.0 - (1.0 - tau0) / std::pow(static_cast<scalar_t>(iter), gamma);
 
-        // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
-        // for the primal and dual steps: (x + sx * dx, y + sy * dy, u + su * du, v + sv * dv)
-        const auto s      = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
-        const auto lstats = program.lsearch(s, logger);
-        logger.info("residual=", lstats.m_residual, ",success=", lstats.m_success ? 'y' : 'n', ".\n");
-        if (!lstats.m_success)
-        {
-            break;
-        }
+        // predictor-corrector update of primal-dual variables
+        const auto stats = program.update(tau);
+
+        logger.info("predictor: precision=", stats.m_predictor_stats.m_precision,
+                    ",rcond=", stats.m_predictor_stats.m_rcond, ",valid=", stats.m_predictor_stats.m_valid ? 'y' : 'n',
+                    ".\n");
+
+        logger.info("corrector: precision=", stats.m_corrector_stats.m_precision,
+                    ",rcond=", stats.m_corrector_stats.m_rcond, ",valid=", stats.m_corrector_stats.m_valid ? 'y' : 'n',
+                    ".\n");
+
+        logger.info("residual=", stats.m_residual, ",sigma=", stats.m_sigma, ",alpha=", stats.m_alpha, ".\n");
 
         // update current state
         cstate.update(program.original_x(), program.original_u(), program.original_v());
@@ -103,9 +95,14 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // stop if no significant improvement
-        if (lstats.m_residual < tiny_res || bstate.kkt_optimality_test() < tiny_kkt)
+        if (stats.m_residual < tiny_res)
         {
             logger.info("stopping as residual too small!\n");
+            break;
+        }
+        else if (bstate.kkt_optimality_test() < tiny_kkt)
+        {
+            logger.info("stopping as KKT optimality criteria too small!\n");
             break;
         }
     }

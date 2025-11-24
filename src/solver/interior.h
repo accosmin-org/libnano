@@ -13,10 +13,9 @@ namespace nano
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 /// see (4) "COSMO: A conic operator splitting method for convex conic problems", M. Garstka et al., 2020.
 ///
-/// NB: the implementation follows the notation from (2).
+/// NB: the implementation follows the notation from (3).
 /// NB: the matrices are scaled using the modified Ruiz equilibration from (4).
-/// NB: the line-search from (2) was replaced with independant primal and dual maximum steps and
-///     the geometrically decreasing step length: 1 - (1 - s0) / (iteration + 1)^gamma.
+/// NB: the maximum allowed step length is decreasing geometrically: 1 - (1 - tau0) / (iteration + 1)^gamma.
 ///
 class NANO_PUBLIC solver_ipm_t final : public solver_t
 {
