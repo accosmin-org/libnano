@@ -141,7 +141,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     // initialize: see (2), p. 613, u = -1 / (G * x - h) = 1 / y
     m_x.segment(0, n)         = x0.vector();
     m_x.segment(n, m).array() = (m_h - m_G * x0).array().abs().max(1.0);
-    m_u.array()               = 1 / m_x.segment(n, m).array();
+    m_u.array()               = 1.0 / m_x.segment(n, m).array();
 
     // move towards the center of the feasibility set to improve convergence: see (1), p. 485
     update_residual(0.0);
@@ -181,9 +181,12 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
         stats.m_predictor_stats = solve();
 
-        const auto alpha_affine = std::min(make_umax(u, du, 1.0 - 1e-15), make_umax(y, dy, 1.0 - 1e-15));
+        const auto alpha_affine = std::min(make_umax(u, du, 1.0), make_umax(y, dy, 1.0));
         const auto miu          = y.dot(u);
         const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
+
+        assert(std::isfinite(miu));
+        assert(std::isfinite(miu_affine));
 
         // TODO: safeguard sigma within reasonable limits
         // TODO: configurable power
@@ -195,6 +198,11 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
         stats.m_corrector_stats = solve();
         stats.m_alpha           = std::min(make_umax(u, du, tau), make_umax(y, dy, tau));
+
+        assert((y + stats.m_alpha * dy).minCoeff() > 0.0);
+        assert((u + stats.m_alpha * du).minCoeff() > 0.0);
+
+        // TODO: check if faster / more robust with a line-search for pstep/dstep!
     }
 
     else

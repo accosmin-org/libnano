@@ -14,7 +14,7 @@ requires((is_tensor_v<tvectoru> || is_eigen_v<tvectoru>) && (is_tensor_v<tvector
 scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau)
 {
     assert(tau > 0.0);
-    assert(tau < 1.0);
+    assert(tau <= 1.0);
     assert(u.size() == du.size());
     assert(u.array().minCoeff() > 0.0);
 
@@ -26,6 +26,9 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau)
             step = std::min(step, -tau * u(i) / du(i));
         }
     }
+
+    assert((u + step * du - (1.0 - tau) * u).minCoeff() > 0.0);
+    assert((u + step * du).minCoeff() > 0.0);
 
     return step;
 }
