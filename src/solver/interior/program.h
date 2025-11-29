@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/Dense>
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
 #include <nano/function/util.h>
@@ -78,7 +79,9 @@ public:
 
     struct stats_t
     {
-        scalar_t    m_alpha{0.0};      ///< step length
+        bool        m_valid{false};    ///<
+        scalar_t    m_pstep{0.0};      ///< step length (primal)
+        scalar_t    m_dstep{0.0};      ///< step length (dual)
         scalar_t    m_sigma{0.0};      ///< centering parameter
         scalar_t    m_residual{0.0};   ///< residual (primal, dual, centering)
         kkt_stats_t m_predictor_stats; ///< statistics for solving the KKT system (predictor step)
@@ -92,14 +95,19 @@ private:
 
     kkt_stats_t solve();
 
+    void update_solver();
     void update_original();
     void update_residual(scalar_t sigma);
+
+    std::tuple<scalar_t, scalar_t, bool> lsearch(scalar_t pstep, scalar_t dstep);
 
     tensor_size_t n() const { return m_c.size(); }
 
     tensor_size_t p() const { return m_A.rows(); }
 
     tensor_size_t m() const { return m_G.rows(); }
+
+    using kkt_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
 
     // attributes
     const function_t& m_function; ///< original function to minimize
@@ -127,5 +135,6 @@ private:
     matrix_t          m_lmat;     ///< reduced KKT system: lmat * lsol = lvec
     vector_t          m_lvec;     ///<
     vector_t          m_lsol;     ///<
+    kkt_solver_t      m_solver;   ///<
 };
 } // namespace nano

@@ -11,11 +11,13 @@ namespace nano
 ///
 template <class tvectoru, class tvectordu>
 requires((is_tensor_v<tvectoru> || is_eigen_v<tvectoru>) && (is_tensor_v<tvectordu> || is_eigen_v<tvectordu>))
-scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau, const scalar_t epsilon = 1e-14)
+scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau, const scalar_t epsilon = 1e-15)
 {
     assert(tau > 0.0);
     assert(tau <= 1.0);
     assert(u.size() == du.size());
+    assert(u.array().allFinite());
+    assert(du.array().allFinite());
     assert(u.array().minCoeff() > 0.0);
 
     auto step = 1.0;
@@ -27,7 +29,8 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau, c
         }
     }
 
-    assert((u + step * du - (1.0 - tau) * u).minCoeff() > 0.0);
+    step *= 0.99;
+
     assert((u + step * du).minCoeff() > 0.0);
 
     return step;

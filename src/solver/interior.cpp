@@ -77,7 +77,15 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
                     ",rcond=", stats.m_corrector_stats.m_rcond, ",valid=", stats.m_corrector_stats.m_valid ? 'y' : 'n',
                     ".\n");
 
-        logger.info("residual=", stats.m_residual, ",sigma=", stats.m_sigma, ",alpha=", stats.m_alpha, ".\n");
+        logger.info("residual=", stats.m_residual, ",sigma=", stats.m_sigma, ",pstep=", stats.m_pstep, ",dstep=", stats.m_dstep, ".\n");
+
+        if (!stats.m_valid)
+        {
+            logger.info("stopping as line-search step failed!\n");
+            break;
+        }
+
+        // TODO: stop if the line-search fails (small step lengths or (y, u) not positive anymore)
 
         // update current state
         cstate.update(program.original_x(), program.original_u(), program.original_v());
