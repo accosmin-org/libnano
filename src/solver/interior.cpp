@@ -86,8 +86,6 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
             break;
         }
 
-        // TODO: stop if the line-search fails (small step lengths or (y, u) not positive anymore)
-
         // update current state
         cstate.update(program.original_x(), program.original_u(), program.original_v());
         done_kkt_optimality_test(cstate, cstate.valid(), logger);

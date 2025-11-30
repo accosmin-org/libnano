@@ -70,6 +70,6 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau)
 /// NB: if Q is empty then the program is considered linear.
 ///
 NANO_PUBLIC void modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G,
-                                             vector_t& h, vector_t& dA, matrix_t& A, vector_t& b, scalar_t tau = 1e-8,
-                                             scalar_t tolerance = 1e-8);
+                                             vector_t& h, vector_t& dA, matrix_t& A, vector_t& b, scalar_t tau = 1e-12,
+                                             scalar_t tolerance = 1e-12);
 } // namespace nano

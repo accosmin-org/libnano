@@ -105,7 +105,7 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
         const auto dy_affine    = dy;
         const auto du_affine    = du;
-        const auto alpha_affine = std::min(make_umax(u, du, 1.0), make_umax(y, dy, 1.0));
+        const auto alpha_affine = std::min(make_umax(y, dy, 1.0), make_umax(u, du, 1.0));
         const auto miu          = y.dot(u);
         const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
 
@@ -366,7 +366,7 @@ std::tuple<scalar_t, bool> program_t::lsearch_residual(scalar_t lstep)
     const auto residual0 = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
     const auto max_iters = 100;
     const auto beta      = 0.9;
-    const auto alpha     = 1e-4;
+    const auto alpha     = 1e-6;
 
     auto valid = false;
     for (auto iter = 0; iter < max_iters; ++iter)
