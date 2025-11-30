@@ -77,7 +77,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
                     ",rcond=", stats.m_corrector_stats.m_rcond, ",valid=", stats.m_corrector_stats.m_valid ? 'y' : 'n',
                     ".\n");
 
-        logger.info("residual=", stats.m_residual, ",sigma=", stats.m_sigma, ",pstep=", stats.m_pstep, ",dstep=", stats.m_dstep, ".\n");
+        logger.info("residual=", stats.m_residual, ",tau=", tau, ",sigma=", stats.m_sigma, ",alpha=", stats.m_alpha,
+                    ".\n");
 
         if (!stats.m_valid)
         {

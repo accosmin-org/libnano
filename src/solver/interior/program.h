@@ -4,7 +4,6 @@
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
 #include <nano/function/util.h>
-#include <nano/logger.h>
 
 namespace nano
 {
@@ -26,7 +25,7 @@ namespace nano
 /// see (2) ch.11 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-/// NB: the implementation follows the notation from (3, ch. 16).
+/// NB: the implementation follows the notation from (2, ch. 11).
 /// NB: the original tensors (Q, c, G, h, A, b) are scaled in-place.
 /// NB: the primal-dual iterate (x, u, v) are also scaled similarly.
 ///
@@ -80,8 +79,7 @@ public:
     struct stats_t
     {
         bool        m_valid{false};    ///<
-        scalar_t    m_pstep{0.0};      ///< step length (primal)
-        scalar_t    m_dstep{0.0};      ///< step length (dual)
+        scalar_t    m_alpha{0.0};      ///< step length (primal/dual)
         scalar_t    m_sigma{0.0};      ///< centering parameter
         scalar_t    m_residual{0.0};   ///< residual (primal, dual, centering)
         kkt_stats_t m_predictor_stats; ///< statistics for solving the KKT system (predictor step)
@@ -99,7 +97,7 @@ private:
     void update_original();
     void update_residual(scalar_t sigma);
 
-    std::tuple<scalar_t, scalar_t, bool> lsearch(scalar_t pstep, scalar_t dstep);
+    std::tuple<scalar_t, bool> lsearch(scalar_t lstep);
 
     tensor_size_t n() const { return m_c.size(); }
 

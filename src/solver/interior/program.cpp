@@ -98,8 +98,6 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
     if (m > 0)
     {
-        // TODO: couple step lengths for primal and dual variables
-
         // predictor step
         update_residual(0.0);
         update_solver();
@@ -126,7 +124,8 @@ program_t::stats_t program_t::update(const scalar_t tau)
         // line-search
         const auto pstep = make_umax(y, dy, tau);
         const auto dstep = make_umax(u, du, tau);
-        std::tie(stats.m_pstep, stats.m_dstep, stats.m_valid) = lsearch(std::min(pstep, dstep), std::min(pstep, dstep));
+
+        std::tie(stats.m_alpha, stats.m_valid) = lsearch(std::min(pstep, dstep));
     }
 
     else
@@ -136,17 +135,16 @@ program_t::stats_t program_t::update(const scalar_t tau)
         update_solver();
 
         stats.m_predictor_stats = solve();
-        stats.m_pstep           = tau;
-        stats.m_dstep           = tau;
+        stats.m_alpha           = tau;
         stats.m_valid           = true;
     }
 
     // update primal-dual variables
-    m_x.segment(0, n) = x + stats.m_pstep * dx;
-    m_x.segment(n, m) = y + stats.m_pstep * dy;
-    m_u               = u + stats.m_dstep * du;
-    m_v.segment(0, p) = v + stats.m_dstep * dv;
-    m_v.segment(p, m) = w + stats.m_dstep * dw;
+    m_x.segment(0, n) = x + stats.m_alpha * dx;
+    m_x.segment(n, m) = y + stats.m_alpha * dy;
+    m_u               = u + stats.m_alpha * du;
+    m_v.segment(0, p) = v + stats.m_alpha * dv;
+    m_v.segment(p, m) = w + stats.m_alpha * dw;
 
     update_original();
 
@@ -279,7 +277,7 @@ void program_t::update_residual(const scalar_t sigma)
     }
 }
 
-std::tuple<scalar_t, scalar_t, bool> program_t::lsearch(const scalar_t pstep, const scalar_t dstep)
+std::tuple<scalar_t, bool> program_t::lsearch(scalar_t lstep)
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -297,12 +295,6 @@ std::tuple<scalar_t, scalar_t, bool> program_t::lsearch(const scalar_t pstep, co
     const auto dv = m_dv.segment(0, p);
     const auto dw = m_dv.segment(p, m);
 
-    auto xstep = pstep;
-    auto ystep = pstep;
-    auto ustep = dstep;
-    auto vstep = dstep;
-    auto wstep = dstep;
-
     const auto make_residual = [&]() -> scalar_t
     {
         auto residual = 0.0;
@@ -314,24 +306,24 @@ std::tuple<scalar_t, scalar_t, bool> program_t::lsearch(const scalar_t pstep, co
         }
         else
         {
-            m_rdual.segment(0, n).matrix() = m_Q * (x + xstep * dx) + m_c;
+            m_rdual.segment(0, n).matrix() = m_Q * (x + lstep * dx) + m_c;
         }
-        m_rdual.segment(0, n) += m_A.transpose() * (v + vstep * dv);
-        m_rdual.segment(0, n) += m_G.transpose() * (w + wstep * dw);
-        m_rdual.segment(n, m) = (w + wstep * dw) - (u + ustep * du);
+        m_rdual.segment(0, n) += m_A.transpose() * (v + lstep * dv);
+        m_rdual.segment(0, n) += m_G.transpose() * (w + lstep * dw);
+        m_rdual.segment(n, m) = (w + lstep * dw) - (u + lstep * du);
 
         residual += m_rdual.squaredNorm();
 
         // primal residual
-        m_rprim.segment(0, p) = m_A * (x + xstep * dx) - m_b;
-        m_rprim.segment(p, m) = m_G * (x + xstep * dx) + (y + ystep * dy) - m_h;
+        m_rprim.segment(0, p) = m_A * (x + lstep * dx) - m_b;
+        m_rprim.segment(p, m) = m_G * (x + lstep * dx) + (y + lstep * dy) - m_h;
 
         residual += m_rprim.squaredNorm();
 
         // centering residual
         if (m > 0)
         {
-            residual += (y + ystep * dy).dot(u + ustep * du);
+            residual += (y + lstep * dy).dot(u + lstep * du);
         }
 
         return residual;
@@ -343,26 +335,19 @@ std::tuple<scalar_t, scalar_t, bool> program_t::lsearch(const scalar_t pstep, co
     const auto alpha     = 1e-4;
 
     auto valid = false;
-    auto stepX = 1.0;
-
     for (auto iter = 0; iter < max_iters; ++iter)
     {
-        if (const auto residualX = make_residual(); residualX < (1.0 - stepX * alpha) * residual0)
+        if (const auto residualX = make_residual(); residualX < (1.0 - lstep * alpha) * residual0)
         {
             valid = true;
             break;
         }
 
-        stepX *= beta;
-        xstep *= beta;
-        ystep *= beta;
-        ustep *= beta;
-        vstep *= beta;
-        wstep *= beta;
+        lstep *= beta;
     }
 
-    assert((y + ystep * dy).minCoeff() > 0.0);
-    assert((u + ustep * du).minCoeff() > 0.0);
+    assert((y + lstep * dy).minCoeff() > 0.0);
+    assert((u + lstep * du).minCoeff() > 0.0);
 
-    return std::make_tuple(ystep, ustep, valid);
+    return std::make_tuple(lstep, valid);
 }
