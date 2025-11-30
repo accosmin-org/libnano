@@ -68,7 +68,6 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     // move towards the center of the feasibility set to improve convergence: see (1), p. 485
     update_residual(0.0);
     update_solver();
-
     solve();
 
     m_x.segment(n, m).array() = (m_x.segment(n, m).array() + m_dx.segment(n, m).array()).abs().max(1.0);
@@ -99,13 +98,11 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
     if (m > 0)
     {
-        // TODO: single matrix decomposition for predictor and corrector steps
         // TODO: couple step lengths for primal and dual variables
 
         // predictor step
         update_residual(0.0);
         update_solver();
-
         stats.m_predictor_stats = solve();
 
         const auto dy_affine    = dy;
@@ -124,7 +121,6 @@ program_t::stats_t program_t::update(const scalar_t tau)
         // corrector step
         update_residual(stats.m_sigma);
         m_rcent.array() += dy_affine.array() * du_affine.array();
-
         stats.m_corrector_stats = solve();
 
         // line-search
@@ -344,7 +340,7 @@ std::tuple<scalar_t, scalar_t, bool> program_t::lsearch(const scalar_t pstep, co
     const auto residual0 = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
     const auto max_iters = 100;
     const auto beta      = 0.9;
-    const auto alpha     = 1e-6;
+    const auto alpha     = 1e-4;
 
     auto valid = false;
     auto stepX = 1.0;

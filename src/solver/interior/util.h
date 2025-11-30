@@ -5,13 +5,13 @@
 namespace nano
 {
 ///
-/// \brief return the maximum scalar factor `step` so that `u + step * du > (1 - tau) * u` element-wise.
+/// \brief return the maximum scalar factor `step` so that `u + step * du >= (1 - tau) * u` element-wise.
 ///
 /// NB: it is assumed that the vector `u` is strictly positive element-wise.
 ///
 template <class tvectoru, class tvectordu>
 requires((is_tensor_v<tvectoru> || is_eigen_v<tvectoru>) && (is_tensor_v<tvectordu> || is_eigen_v<tvectordu>))
-scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau, const scalar_t epsilon = 1e-15)
+scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau)
 {
     assert(tau > 0.0);
     assert(tau <= 1.0);
@@ -20,18 +20,34 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau, c
     assert(du.array().allFinite());
     assert(u.array().minCoeff() > 0.0);
 
+    const auto delta = 2e-16;
+    const auto gamma = 0.99;
+
     auto step = 1.0;
     for (tensor_size_t i = 0, size = u.size(); i < size; ++i)
     {
         if (du(i) < 0.0)
         {
-            step = std::min(step, (epsilon - tau * u(i)) / du(i));
+            step = std::min(step, -tau * u(i) / du(i));
         }
     }
 
-    step *= 0.99;
+    assert(step > 0.0);
 
-    assert((u + step * du).minCoeff() > 0.0);
+    // NB: take into account numerical precision issues and make sure the post-condition holds.
+    for (tensor_size_t trial = 0; trial < 10; ++trial)
+    {
+        if ((u + step * du - (1.0 - tau) * u).minCoeff() < delta)
+        {
+            step *= gamma;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    assert((u + step * du - (1.0 - tau) * u).minCoeff() >= 0.0);
 
     return step;
 }
