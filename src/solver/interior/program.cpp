@@ -112,8 +112,6 @@ program_t::stats_t program_t::update(const scalar_t tau)
         assert(std::isfinite(miu));
         assert(std::isfinite(miu_affine));
 
-        // TODO: safeguard sigma within reasonable limits
-        // TODO: configurable power
         stats.m_sigma = std::pow(miu_affine / miu, 3.0);
 
         // corrector step
@@ -125,7 +123,8 @@ program_t::stats_t program_t::update(const scalar_t tau)
         const auto pstep = make_umax(y, dy, tau);
         const auto dstep = make_umax(u, du, tau);
 
-        std::tie(stats.m_alpha, stats.m_valid) = lsearch(std::min(pstep, dstep));
+        // std::tie(stats.m_alpha, stats.m_valid) = lsearch_central(std::min(pstep, dstep));
+        std::tie(stats.m_alpha, stats.m_valid) = lsearch_residual(std::min(pstep, dstep));
     }
 
     else
@@ -277,7 +276,42 @@ void program_t::update_residual(const scalar_t sigma)
     }
 }
 
-std::tuple<scalar_t, bool> program_t::lsearch(scalar_t lstep)
+std::tuple<scalar_t, bool> program_t::lsearch_central(scalar_t lstep)
+{
+    const auto n = this->n();
+    const auto m = this->m();
+
+    const auto y = m_x.segment(n, m);
+    const auto u = m_u.segment(0, m);
+
+    const auto dy = m_dx.segment(n, m);
+    const auto du = m_du.segment(0, m);
+
+    const auto max_iters = 100;
+    const auto beta      = 0.7;
+    const auto gamma     = 0.01;
+
+    auto valid = false;
+    for (auto iter = 0; iter < max_iters; ++iter)
+    {
+        const auto miu = (y + lstep * dy).dot(u + lstep * du) / static_cast<scalar_t>(m);
+
+        if (((y + lstep * dy).array() * (u + lstep * du).array()).minCoeff() >= gamma * miu)
+        {
+            valid = true;
+            break;
+        }
+
+        lstep *= beta;
+    }
+
+    assert((y + lstep * dy).minCoeff() > 0.0);
+    assert((u + lstep * du).minCoeff() > 0.0);
+
+    return std::make_tuple(lstep, valid);
+}
+
+std::tuple<scalar_t, bool> program_t::lsearch_residual(scalar_t lstep)
 {
     const auto n = this->n();
     const auto m = this->m();

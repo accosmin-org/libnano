@@ -97,7 +97,8 @@ private:
     void update_original();
     void update_residual(scalar_t sigma);
 
-    std::tuple<scalar_t, bool> lsearch(scalar_t lstep);
+    std::tuple<scalar_t, bool> lsearch_central(scalar_t lstep);
+    std::tuple<scalar_t, bool> lsearch_residual(scalar_t lstep);
 
     tensor_size_t n() const { return m_c.size(); }
 

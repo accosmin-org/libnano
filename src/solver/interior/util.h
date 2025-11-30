@@ -21,7 +21,7 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t tau)
     assert(u.array().minCoeff() > 0.0);
 
     const auto delta = 2e-16;
-    const auto gamma = 0.99;
+    const auto gamma = 0.999;
 
     auto step = 1.0;
     for (tensor_size_t i = 0, size = u.size(); i < size; ++i)
