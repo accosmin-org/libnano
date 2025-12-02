@@ -70,8 +70,8 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     update_solver();
     solve();
 
-    m_x.segment(n, m).array() = (m_x.segment(n, m).array() + m_dx.segment(n, m).array()).abs().max(1.0);
-    m_u.array()               = (m_u.array() + m_du.array()).abs().max(1.0);
+    m_x.segment(n, m).array() = (m_x.segment(n, m) + m_dx.segment(n, m)).array().abs().max(1.0);
+    m_u.array()               = (m_u + m_du).array().abs().max(1.0);
 
     update_original();
 }
@@ -115,8 +115,9 @@ program_t::stats_t program_t::update(const scalar_t tau)
         stats.m_sigma = std::pow(miu_affine / miu, 3.0);
 
         // corrector step
-        update_residual(stats.m_sigma);
-        m_rcent.array() += dy_affine.array() * du_affine.array();
+        m_rcent.array() = u.array() * y.array() + dy_affine.array() * du_affine.array() -
+                          stats.m_sigma * y.dot(u) / static_cast<scalar_t>(m);
+
         stats.m_corrector_stats = solve();
 
         // line-search
