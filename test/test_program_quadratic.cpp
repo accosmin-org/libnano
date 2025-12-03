@@ -288,6 +288,13 @@ UTEST_CASE(bundle_cases_with_level)
 
         check_function(function);
         check_minimize(make_solvers(), function);
+
+        if (index == 1)
+        {
+            const auto x0 = make_vector<scalar_t>(0.3720481659153125, 0.8746846640195591, -0.5662730895148255,
+                                                  0.08623337083228955, 0.9036251941038855);
+            check_minimize(make_solvers(), function, x0);
+        }
     }
 }
 
