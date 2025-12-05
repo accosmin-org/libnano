@@ -66,8 +66,8 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     m_u.array()               = 1.0 / m_x.segment(n, m).array();
 
     // move towards the center of the feasibility set to improve convergence: see (1), p. 485
-    update_residual(0.0);
     update_solver();
+    update_residual(0.0);
     solve();
 
     m_x.segment(n, m).array() = (m_x.segment(n, m) + m_dx.segment(n, m)).array().abs().max(1.0);
@@ -98,9 +98,10 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
     if (m > 0)
     {
+        update_solver();
+
         // predictor step
         update_residual(0.0);
-        update_solver();
         stats.m_predictor_stats = solve();
 
         const auto dy_affine    = dy;
@@ -121,11 +122,13 @@ program_t::stats_t program_t::update(const scalar_t tau)
         stats.m_corrector_stats = solve();
 
         // line-search
-        const auto pstep = make_umax(y, dy, tau);
-        const auto dstep = make_umax(u, du, tau);
+        const auto pstep = make_umax(y, dy, 1.0);
+        const auto dstep = make_umax(u, du, 1.0);
 
         // std::tie(stats.m_alpha, stats.m_valid) = lsearch_central(std::min(pstep, dstep));
-        std::tie(stats.m_alpha, stats.m_valid) = lsearch_residual(std::min(pstep, dstep));
+        // std::tie(stats.m_alpha, stats.m_valid) = lsearch_residual(std::min(pstep, dstep));
+        stats.m_alpha = 0.99 * std::min(pstep, dstep);
+        stats.m_valid = true;
     }
 
     else
@@ -312,7 +315,7 @@ std::tuple<scalar_t, bool> program_t::lsearch_central(scalar_t lstep)
     return std::make_tuple(lstep, valid);
 }
 
-std::tuple<scalar_t, bool> program_t::lsearch_residual(scalar_t lstep)
+std::tuple<scalar_t, bool> program_t::lsearch_residual(const scalar_t lstep0)
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -330,7 +333,7 @@ std::tuple<scalar_t, bool> program_t::lsearch_residual(scalar_t lstep)
     const auto dv = m_dv.segment(0, p);
     const auto dw = m_dv.segment(p, m);
 
-    const auto make_residual = [&]() -> scalar_t
+    const auto make_residual = [&](const scalar_t lstep) -> scalar_t
     {
         auto residual = 0.0;
 
@@ -346,33 +349,35 @@ std::tuple<scalar_t, bool> program_t::lsearch_residual(scalar_t lstep)
         m_rdual.segment(0, n) += m_A.transpose() * (v + lstep * dv);
         m_rdual.segment(0, n) += m_G.transpose() * (w + lstep * dw);
         m_rdual.segment(n, m) = (w + lstep * dw) - (u + lstep * du);
-
-        residual += m_rdual.squaredNorm();
+        residual += m_rdual.lpNorm<2>() / (1.0 + m_c.lpNorm<2>());
 
         // primal residual
         m_rprim.segment(0, p) = m_A * (x + lstep * dx) - m_b;
-        m_rprim.segment(p, m) = m_G * (x + lstep * dx) + (y + lstep * dy) - m_h;
+        residual += m_rprim.segment(0, p).lpNorm<2>() / (1.0 + m_b.lpNorm<2>());
 
-        residual += m_rprim.squaredNorm();
+        m_rprim.segment(p, m) = m_G * (x + lstep * dx) + (y + lstep * dy) - m_h;
+        residual += m_rprim.segment(p, m).lpNorm<2>() / (1.0 + m_h.lpNorm<2>());
 
         // centering residual
         if (m > 0)
         {
-            residual += (y + lstep * dy).dot(u + lstep * du);
+            residual += std::sqrt((y + lstep * dy).dot(u + lstep * du));
         }
 
         return residual;
     };
 
-    const auto residual0 = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
+    const auto residual0 = make_residual(0.0);
     const auto max_iters = 100;
     const auto beta      = 0.9;
     const auto alpha     = 1e-6;
 
     auto valid = false;
+    auto lstep = lstep0;
+
     for (auto iter = 0; iter < max_iters; ++iter)
     {
-        if (const auto residualX = make_residual(); residualX < (1.0 - lstep * alpha) * residual0)
+        if (const auto residualX = make_residual(lstep); residualX < (1.0 - lstep * alpha) * residual0)
         {
             valid = true;
             break;
