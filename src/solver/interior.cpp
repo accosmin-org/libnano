@@ -8,8 +8,6 @@ solver_ipm_t::solver_ipm_t()
 {
     register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::tiny_res", 0.0, LT, 1e-24, LE, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::tiny_kkt", 0.0, LT, 1e-18, LE, 1.0));
 
     parameter("solver::max_evals") = 100;
 }
@@ -52,8 +50,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
 {
     const auto tau0      = parameter("solver::ipm::tau0").value<scalar_t>();
     const auto gamma     = parameter("solver::ipm::gamma").value<scalar_t>();
-    const auto tiny_res  = parameter("solver::ipm::tiny_res").value<scalar_t>();
-    const auto tiny_kkt  = parameter("solver::ipm::tiny_kkt").value<scalar_t>();
+    const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& function = program.function();
@@ -77,8 +74,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
                     ",rcond=", stats.m_corrector_stats.m_rcond, ",valid=", stats.m_corrector_stats.m_valid ? 'y' : 'n',
                     ".\n");
 
-        logger.info("residual=", stats.m_residual, ",tau=", tau, ",sigma=", stats.m_sigma, ",alpha=", stats.m_alpha,
-                    ".\n");
+        logger.info("tau=", tau, ",sigma=", stats.m_sigma, ",alpha=", stats.m_alpha, ".\n");
+
+        logger.info("res=", stats.m_primal_residual, "/", stats.m_dual_residual, ",gap=", stats.m_duality_gap, ".\n");
 
         if (!stats.m_valid)
         {
@@ -101,15 +99,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
             bstate = cstate;
         }
 
-        // stop if no significant improvement
-        if (stats.m_residual < tiny_res)
+        // check convergence
+        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < 1e-3 * epsilon)
         {
-            logger.info("stopping as residual too small!\n");
-            break;
-        }
-        else if (bstate.kkt_optimality_test() < tiny_kkt)
-        {
-            logger.info("stopping as KKT optimality criteria too small!\n");
             break;
         }
     }

@@ -78,12 +78,14 @@ public:
 
     struct stats_t
     {
-        bool        m_valid{false};    ///<
-        scalar_t    m_alpha{0.0};      ///< step length (primal/dual)
-        scalar_t    m_sigma{0.0};      ///< centering parameter
-        scalar_t    m_residual{0.0};   ///< residual (primal, dual, centering)
-        kkt_stats_t m_predictor_stats; ///< statistics for solving the KKT system (predictor step)
-        kkt_stats_t m_corrector_stats; ///< statistics for solving the KKT system (corrector step)
+        bool        m_valid{false};         ///<
+        scalar_t    m_alpha{0.0};           ///< step length (primal/dual)
+        scalar_t    m_sigma{0.0};           ///< centering parameter
+        scalar_t    m_primal_residual{0.0}; ///<
+        scalar_t    m_dual_residual{0.0};   ///<
+        scalar_t    m_duality_gap{0.0};     ///<
+        kkt_stats_t m_predictor_stats;      ///< statistics for solving the KKT system (predictor step)
+        kkt_stats_t m_corrector_stats;      ///< statistics for solving the KKT system (corrector step)
     };
 
     stats_t update(scalar_t tau);
@@ -96,9 +98,6 @@ private:
     void update_solver();
     void update_original();
     void update_residual(scalar_t sigma);
-
-    std::tuple<scalar_t, bool> lsearch_central(scalar_t lstep);
-    std::tuple<scalar_t, bool> lsearch_residual(scalar_t lstep);
 
     tensor_size_t n() const { return m_c.size(); }
 
