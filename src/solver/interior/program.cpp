@@ -182,15 +182,15 @@ program_t::kkt_stats_t program_t::solve()
 
     m_lsol.vector() = m_solver.solve(m_lvec.vector());
 
-    const auto dxn = m_lsol.segment(0, n);
-    const auto dvp = m_lsol.segment(n, p);
-    const auto dvm = a7.array() / y.array() + (m_u.array() / y.array()) * (m_G * dxn).array();
+    const auto dx = m_lsol.segment(0, n);
+    const auto dv = m_lsol.segment(n, p);
+    const auto dw = a7.array() / y.array() + (m_u.array() / y.array()) * (m_G * dx).array();
 
-    m_dx.segment(0, n) = dxn;
-    m_dx.segment(n, m) = b5 - m_G * dxn;
-    m_du.segment(0, m) = dvm - b2.array();
-    m_dv.segment(0, p) = dvp;
-    m_dv.segment(p, m) = dvm;
+    m_dx.segment(0, n) = dx;
+    m_dx.segment(n, m) = b5 - m_G * dx;
+    m_du.segment(0, m) = dw - b2.array();
+    m_dv.segment(0, p) = dv;
+    m_dv.segment(p, m) = dw;
 
     // verify solution
     const auto valid    = m_lmat.all_finite() && m_lvec.all_finite() && m_lsol.all_finite();
