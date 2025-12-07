@@ -104,8 +104,6 @@ program_t::stats_t program_t::update(const scalar_t tau)
         update_residual(0.0);
         stats.m_predictor_stats = solve();
 
-        const auto dy_affine    = dy;
-        const auto du_affine    = du;
         const auto alpha_affine = std::min(make_umax(y, dy, tau), make_umax(u, du, tau));
         const auto miu          = y.dot(u);
         const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
@@ -116,8 +114,8 @@ program_t::stats_t program_t::update(const scalar_t tau)
         stats.m_sigma = std::pow(miu_affine / miu, 3.0);
 
         // corrector step
-        m_rcent.array() = u.array() * y.array() + dy_affine.array() * du_affine.array() -
-                          stats.m_sigma * y.dot(u) / static_cast<scalar_t>(m);
+        m_rcent.array() =
+            u.array() * y.array() + dy.array() * du.array() - stats.m_sigma * y.dot(u) / static_cast<scalar_t>(m);
 
         stats.m_corrector_stats = solve();
 
@@ -145,19 +143,16 @@ program_t::stats_t program_t::update(const scalar_t tau)
     v += stats.m_alpha * dv;
     w += stats.m_alpha * dw;
 
-    // compute convergence criterion
-    const auto presidual1   = (m_A * x - m_b).lpNorm<Eigen::Infinity>();
-    const auto presidual2   = (m_G * x + y - m_h).lpNorm<Eigen::Infinity>();
-    stats.m_primal_residual = std::max(presidual1, presidual2);
-
-    const auto dresidual1 = (m_Q * x + m_c + m_A.transpose() * v + m_G.transpose() * w).lpNorm<Eigen::Infinity>();
-    const auto dresidual2 = (w - u).lpNorm<Eigen::Infinity>();
-    stats.m_dual_residual = std::max(dresidual1, dresidual2);
-
-    stats.m_duality_gap = std::fabs(x.dot(m_Q * x + m_c) + m_b.dot(v) + m_h.dot(w));
-
     // update original un-scaled primal and dual variables
     update_original();
+
+    // compute convergence criteria (in the original un-scaled space)
+    stats.m_primal_residual = (m_A * m_orig_x - m_b).lpNorm<Eigen::Infinity>();
+
+    stats.m_dual_residual =
+        (m_Q * m_orig_x + m_c + m_A.transpose() * m_orig_v + m_G.transpose() * m_orig_u).lpNorm<Eigen::Infinity>();
+
+    stats.m_duality_gap = std::fabs(m_orig_x.dot(m_Q * m_orig_x + m_c) + m_b.dot(m_orig_v) + m_h.dot(m_orig_u));
 
     return stats;
 }

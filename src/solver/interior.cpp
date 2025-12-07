@@ -6,7 +6,7 @@ using namespace nano;
 solver_ipm_t::solver_ipm_t()
     : solver_t("ipm")
 {
-    register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.9, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
 
     parameter("solver::max_evals") = 100;
@@ -100,7 +100,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // check convergence
-        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < 1e-3 * epsilon)
+        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < epsilon)
         {
             break;
         }
