@@ -100,7 +100,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // check convergence
-        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < epsilon)
+        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < 1e-4 * epsilon)
         {
             break;
         }

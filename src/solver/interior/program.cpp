@@ -115,7 +115,7 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
         // corrector step
         m_rcent.array() =
-            u.array() * y.array() + dy.array() * du.array() - stats.m_sigma * y.dot(u) / static_cast<scalar_t>(m);
+            u.array() * y.array() + dy.array() * du.array() - stats.m_sigma * miu / static_cast<scalar_t>(m);
 
         stats.m_corrector_stats = solve();
 
@@ -146,13 +146,21 @@ program_t::stats_t program_t::update(const scalar_t tau)
     // update original un-scaled primal and dual variables
     update_original();
 
-    // compute convergence criteria (in the original un-scaled space)
-    stats.m_primal_residual = (m_A * m_orig_x - m_b).lpNorm<Eigen::Infinity>();
+    // compute convergence criteria
+    stats.m_primal_residual =                          ///<
+        (m_A * x - m_b).lpNorm<Eigen::Infinity>() +    ///<
+        (m_G * x + y - m_h).lpNorm<Eigen::Infinity>(); ///<
 
-    stats.m_dual_residual =
-        (m_Q * m_orig_x + m_c + m_A.transpose() * m_orig_v + m_G.transpose() * m_orig_u).lpNorm<Eigen::Infinity>();
+    stats.m_dual_residual =                                                                     ///<
+        (m_Q * x + m_c + m_A.transpose() * v + m_G.transpose() * w).lpNorm<Eigen::Infinity>() + ///<
+        (w - u).lpNorm<Eigen::Infinity>();                                                      ///<
 
-    stats.m_duality_gap = std::fabs(m_orig_x.dot(m_Q * m_orig_x + m_c) + m_b.dot(m_orig_v) + m_h.dot(m_orig_u));
+    stats.m_duality_gap = std::fabs(x.dot(m_Q * x + m_c) + m_b.dot(v) + m_h.dot(w));
+
+    const auto scale = m_dQ.lpNorm<Eigen::Infinity>() + m_dA.lpNorm<Eigen::Infinity>() + m_dG.lpNorm<Eigen::Infinity>();
+    stats.m_primal_residual *= scale;
+    stats.m_dual_residual *= scale;
+    stats.m_duality_gap *= scale;
 
     return stats;
 }
