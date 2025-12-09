@@ -8,6 +8,7 @@ solver_ipm_t::solver_ipm_t()
 {
     register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon", 0.0, LT, 1e-15, LE, 1e-6));
 
     parameter("solver::max_evals") = 100;
 }
@@ -50,7 +51,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
 {
     const auto tau0      = parameter("solver::ipm::tau0").value<scalar_t>();
     const auto gamma     = parameter("solver::ipm::gamma").value<scalar_t>();
-    const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
+    const auto epsilon   = parameter("solver::ipm::epsilon").value<scalar_t>();
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& function = program.function();
@@ -83,6 +84,11 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
             logger.info("stopping as line-search step failed!\n");
             break;
         }
+        if (stats.m_predictor_stats.m_precision > 1e-6 || stats.m_corrector_stats.m_precision > 1e-6)
+        {
+            logger.info("stopping as the failed to solve precisely the KKT system!\n");
+            break;
+        }
 
         // update current state
         cstate.update(program.original_x(), program.original_u(), program.original_v());
@@ -100,8 +106,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // check convergence
-        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < 1e-4 * epsilon)
+        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < epsilon)
         {
+            logger.info("stopping as the residuals and the duality gaps are too small!\n");
             break;
         }
     }

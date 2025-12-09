@@ -64,6 +64,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     m_x.segment(0, n)         = x0.vector();
     m_x.segment(n, m).array() = (m_h - m_G * x0).array().abs().max(1.0);
     m_u.array()               = 1.0 / m_x.segment(n, m).array();
+    m_v.array()               = 1.0;
 
     // move towards the center of the feasibility set to improve convergence: see (1), p. 485
     update_solver();
@@ -72,6 +73,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
     m_x.segment(n, m).array() = (m_x.segment(n, m) + m_dx.segment(n, m)).array().abs().max(1.0);
     m_u.array()               = (m_u + m_du).array().abs().max(1.0);
+    m_v.array()               = (m_v + m_dv).array().abs().max(1.0);
 
     update_original();
 }
@@ -111,13 +113,25 @@ program_t::stats_t program_t::update(const scalar_t tau)
         assert(std::isfinite(miu));
         assert(std::isfinite(miu_affine));
 
-        stats.m_sigma = std::pow(miu_affine / miu, 3.0);
+        stats.m_sigma = std::clamp(std::pow(miu_affine / miu, 3.0), 0.0, 1.0);
+
+        if (!std::isfinite(stats.m_sigma) || !du.allFinite() || !dy.allFinite())
+        {
+            stats.m_valid = false;
+            return stats;
+        }
 
         // corrector step
         m_rcent.array() =
             u.array() * y.array() + dy.array() * du.array() - stats.m_sigma * miu / static_cast<scalar_t>(m);
 
         stats.m_corrector_stats = solve();
+
+        if (!std::isfinite(stats.m_sigma) || !du.allFinite() || !dy.allFinite())
+        {
+            stats.m_valid = false;
+            return stats;
+        }
 
         // line-search
         const auto pstep = make_umax(y, dy, tau);
@@ -143,10 +157,14 @@ program_t::stats_t program_t::update(const scalar_t tau)
     v += stats.m_alpha * dv;
     w += stats.m_alpha * dw;
 
-    // update original un-scaled primal and dual variables
+    // update original un-scaled primal-dual variables
     update_original();
 
     // compute convergence criteria
+    const auto normQ = m_dQ.lpNorm<Eigen::Infinity>();
+    const auto normA = m_dA.lpNorm<Eigen::Infinity>();
+    const auto normG = m_dG.lpNorm<Eigen::Infinity>();
+
     stats.m_primal_residual =                          ///<
         (m_A * x - m_b).lpNorm<Eigen::Infinity>() +    ///<
         (m_G * x + y - m_h).lpNorm<Eigen::Infinity>(); ///<
@@ -155,12 +173,12 @@ program_t::stats_t program_t::update(const scalar_t tau)
         (m_Q * x + m_c + m_A.transpose() * v + m_G.transpose() * w).lpNorm<Eigen::Infinity>() + ///<
         (w - u).lpNorm<Eigen::Infinity>();                                                      ///<
 
-    stats.m_duality_gap = std::fabs(x.dot(m_Q * x + m_c) + m_b.dot(v) + m_h.dot(w));
+    stats.m_duality_gap = std::fabs(                     ///<
+        x.dot(m_Q * x + m_c) + m_b.dot(v) + m_h.dot(w)); ///<
 
-    const auto scale = m_dQ.lpNorm<Eigen::Infinity>() + m_dA.lpNorm<Eigen::Infinity>() + m_dG.lpNorm<Eigen::Infinity>();
-    stats.m_primal_residual *= scale;
-    stats.m_dual_residual *= scale;
-    stats.m_duality_gap *= scale;
+    stats.m_primal_residual = stats.m_primal_residual * (1.0 + normA + normG);
+    stats.m_dual_residual   = stats.m_dual_residual * (1.0 + normQ + normA + normG);
+    stats.m_duality_gap     = stats.m_duality_gap * (1.0 + normQ + normA + normG);
 
     return stats;
 }
