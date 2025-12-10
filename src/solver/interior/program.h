@@ -105,6 +105,24 @@ private:
 
     tensor_size_t m() const { return m_G.rows(); }
 
+    auto unpack_dims() const { return std::make_tuple(n(), m(), p()); }
+
+    auto unpack_vars()
+    {
+        const auto [n, m, p] = unpack_dims();
+
+        return std::make_tuple(m_x.segment(0, n), m_x.segment(n, m), m_u.segment(0, m), m_v.segment(0, p),
+                               m_v.segment(p, m));
+    }
+
+    auto unpack_delta()
+    {
+        const auto [n, m, p] = unpack_dims();
+
+        return std::make_tuple(m_dx.segment(0, n), m_dx.segment(n, m), m_du.segment(0, m), m_dv.segment(0, p),
+                               m_dv.segment(p, m));
+    }
+
     using kkt_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
 
     // attributes

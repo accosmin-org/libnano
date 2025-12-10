@@ -7,7 +7,7 @@ solver_ipm_t::solver_ipm_t()
     : solver_t("ipm")
 {
     register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.9, LE, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LE, 2.0, LE, 5.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::epsilon", 0.0, LT, 1e-15, LE, 1e-6));
 
     parameter("solver::max_evals") = 100;
@@ -86,7 +86,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
         if (stats.m_predictor_stats.m_precision > 1e-6 || stats.m_corrector_stats.m_precision > 1e-6)
         {
-            logger.info("stopping as the failed to solve precisely the KKT system!\n");
+            logger.info("stopping as the KKT system wasn't solved precisely!\n");
             break;
         }
 

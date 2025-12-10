@@ -41,60 +41,47 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_lvec(n() + p())
     , m_lsol(n() + p())
 {
-    [[maybe_unused]] const auto n = this->n();
-    [[maybe_unused]] const auto m = this->m();
-    [[maybe_unused]] const auto p = this->p();
+    assert(m_Q.rows() == n());
+    assert(m_Q.cols() == n());
 
-    assert(m_Q.rows() == n);
-    assert(m_Q.cols() == n);
+    assert(m_c.size() == n());
 
-    assert(m_c.size() == n);
+    assert(m_A.rows() == p());
+    assert(m_A.cols() == n());
+    assert(m_b.size() == p());
 
-    assert(m_A.rows() == p);
-    assert(m_A.cols() == n);
-    assert(m_b.size() == p);
-
-    assert(m_G.rows() == m);
-    assert(m_G.cols() == n);
-    assert(m_h.size() == m);
+    assert(m_G.rows() == m());
+    assert(m_G.cols() == n());
+    assert(m_h.size() == m());
 
     ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
 
     // initialize: see (2), p. 613, u = -1 / (G * x - h) = 1 / y
-    m_x.segment(0, n)         = x0.vector();
-    m_x.segment(n, m).array() = (m_h - m_G * x0).array().abs().max(1.0);
-    m_u.array()               = 1.0 / m_x.segment(n, m).array();
-    m_v.array()               = 1.0;
+    auto [x, y, u, v, w] = unpack_vars();
 
-    // move towards the center of the feasibility set to improve convergence: see (1), p. 485
+    x.array() = x0.array();
+    y.array() = (m_h - m_G * x0).array().abs().max(1.0);
+    u.array() = 1.0 / y.array();
+    v.array() = 1.0;
+    w.array() = u.array();
+
+    /*// move towards the center of the feasibility set to improve convergence: see (1), p. 485
     update_solver();
     update_residual(0.0);
     solve();
 
     m_x.segment(n, m).array() = (m_x.segment(n, m) + m_dx.segment(n, m)).array().abs().max(1.0);
     m_u.array()               = (m_u + m_du).array().abs().max(1.0);
-    m_v.array()               = (m_v + m_dv).array().abs().max(1.0);
+    m_v.array()               = (m_v + m_dv).array().abs().max(1.0);*/
 
     update_original();
 }
 
 program_t::stats_t program_t::update(const scalar_t tau)
 {
-    const auto n = this->n();
-    const auto m = this->m();
-    const auto p = this->p();
-
-    auto x = m_x.segment(0, n);
-    auto y = m_x.segment(n, m);
-    auto u = m_u.segment(0, m);
-    auto v = m_v.segment(0, p);
-    auto w = m_v.segment(p, m);
-
-    const auto dx = m_dx.segment(0, n);
-    const auto dy = m_dx.segment(n, m);
-    const auto du = m_du.segment(0, m);
-    const auto dv = m_dv.segment(0, p);
-    const auto dw = m_dv.segment(p, m);
+    const auto [n, m, p]            = unpack_dims();
+    auto [x, y, u, v, w]            = unpack_vars();
+    const auto [dx, dy, du, dv, dw] = unpack_delta();
 
     auto stats = stats_t{};
 
@@ -106,7 +93,7 @@ program_t::stats_t program_t::update(const scalar_t tau)
         update_residual(0.0);
         stats.m_predictor_stats = solve();
 
-        const auto alpha_affine = std::min(make_umax(y, dy, tau), make_umax(u, du, tau));
+        const auto alpha_affine = std::min(make_umax(y, dy, 1.0), make_umax(u, du, 1.0));
         const auto miu          = y.dot(u);
         const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
 
@@ -185,11 +172,9 @@ program_t::stats_t program_t::update(const scalar_t tau)
 
 program_t::kkt_stats_t program_t::solve()
 {
-    const auto n = this->n();
-    const auto m = this->m();
-    const auto p = this->p();
+    const auto [n, m, p]       = unpack_dims();
+    const auto [x, y, u, v, w] = unpack_vars();
 
-    const auto y  = m_x.segment(n, m);
     const auto b1 = -m_rdual.segment(0, n);
     const auto b2 = -m_rdual.segment(n, m);
     const auto b3 = -m_rcent.segment(0, m);
@@ -210,7 +195,7 @@ program_t::kkt_stats_t program_t::solve()
 
     const auto dx = m_lsol.segment(0, n);
     const auto dv = m_lsol.segment(n, p);
-    const auto dw = a7.array() / y.array() + (m_u.array() / y.array()) * (m_G * dx).array();
+    const auto dw = a7.array() / y.array() + (u.array() / y.array()) * (m_G * dx).array();
 
     m_dx.segment(0, n) = dx;
     m_dx.segment(n, m) = b5 - m_G * dx;
@@ -230,11 +215,8 @@ program_t::kkt_stats_t program_t::solve()
 
 void program_t::update_solver()
 {
-    const auto n = this->n();
-    const auto m = this->m();
-    const auto p = this->p();
-
-    const auto y = m_x.segment(n, m);
+    const auto [n, m, p]       = unpack_dims();
+    const auto [x, y, u, v, w] = unpack_vars();
 
     // |Q     0       0     A^T   G^T|   |dxn|   |-rdn|
     // |0     0      -I      0     I |   |dxm|   |-rdm|
@@ -242,7 +224,7 @@ void program_t::update_solver()
     // |A     0       0      0     0 |   |dvp|   |-rpp|
     // |G     I       0      0     0 |   |dvm|   |-rpm|
 
-    m_lmat.block(0, 0, n, n) = m_Q.matrix() + m_G.transpose() * (m_u.array() / y.array()).matrix().asDiagonal() * m_G;
+    m_lmat.block(0, 0, n, n) = m_Q.matrix() + m_G.transpose() * (u.array() / y.array()).matrix().asDiagonal() * m_G;
     m_lmat.block(0, n, n, p) = m_A.transpose();
     m_lmat.block(n, 0, p, n) = m_A.matrix();
     m_lmat.block(n, n, p, p) = matrix_t::zero(p, p);
@@ -252,26 +234,17 @@ void program_t::update_solver()
 
 void program_t::update_original()
 {
-    const auto n = this->n();
-    const auto m = this->m();
-    const auto p = this->p();
+    const auto [x, y, u, v, w] = unpack_vars();
 
-    m_orig_x.array() = m_dQ.array() * m_x.segment(0, n).array();
-    m_orig_u.array() = m_dG.array() * m_v.segment(p, m).array();
-    m_orig_v.array() = m_dA.array() * m_v.segment(0, p).array();
+    m_orig_x.array() = m_dQ.array() * x.array();
+    m_orig_u.array() = m_dG.array() * u.array();
+    m_orig_v.array() = m_dA.array() * v.array();
 }
 
 void program_t::update_residual(const scalar_t sigma)
 {
-    const auto n = this->n();
-    const auto m = this->m();
-    const auto p = this->p();
-
-    const auto x = m_x.segment(0, n);
-    const auto y = m_x.segment(n, m);
-    const auto u = m_u.segment(0, m);
-    const auto v = m_v.segment(0, p);
-    const auto w = m_v.segment(p, m);
+    const auto [n, m, p]       = unpack_dims();
+    const auto [x, y, u, v, w] = unpack_vars();
 
     // dual residual
     m_rdual.segment(0, n).matrix() = m_Q * x + m_c;
