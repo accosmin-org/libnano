@@ -93,11 +93,15 @@ public:
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0);
 
-    kkt_stats_t solve();
-
     void update_solver();
     void update_original();
     void update_residual(scalar_t sigma);
+
+    kkt_stats_t solve();
+
+    scalar_t residual(scalar_t lstep);
+
+    std::tuple<scalar_t, bool> lsearch(scalar_t lstep0);
 
     tensor_size_t n() const { return m_c.size(); }
 
