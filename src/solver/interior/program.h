@@ -4,6 +4,7 @@
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
 #include <nano/function/util.h>
+#include <nano/logger.h>
 
 namespace nano
 {
@@ -88,16 +89,16 @@ public:
         kkt_stats_t m_corrector_stats;      ///< statistics for solving the KKT system (corrector step)
     };
 
-    stats_t update(scalar_t tau);
+    stats_t update(scalar_t tau, const logger_t& logger);
 
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0);
 
-    void update_solver();
+    void update_solver(scalar_t epsilon = 1e-11);
     void update_original();
     void update_residual(scalar_t sigma);
 
-    kkt_stats_t solve();
+    kkt_stats_t solve(const logger_t& logger, int refine_max_iters = 5, scalar_t refine_epsilon = 1e-16);
 
     scalar_t residual(scalar_t lstep);
 

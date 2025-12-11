@@ -58,7 +58,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
     // initialize: see (2), p. 613, u = -1 / (G * x - h) = 1 / y
     auto [x, y, u, v, w] = unpack_vars();
-    auto [dx, dy, du, dv, dw] = unpack_delta();
+    [[maybe_unused]] auto [dx, dy, du, dv, dw] = unpack_delta();
 
     x.array() = x0.array();
     y.array() = (m_h - m_G * x0).array().abs().max(1.0);
@@ -66,19 +66,19 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     v.array() = 1.0;
     w.array() = u.array();
 
-    // move towards the center of the feasibility set to improve convergence: see (1), p. 485
+    /*// move towards the center of the feasibility set to improve convergence: see (1), p. 485
     update_solver();
     update_residual(0.0);
     solve();
 
     y.array() = (y + dy).array().abs().max(1.0);
     u.array() = (u + du).array().abs().max(1.0);
-    w.array() = u.array();
+    w.array() = u.array();*/
 
     update_original();
 }
 
-program_t::stats_t program_t::update(const scalar_t tau)
+program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
 {
     const auto [n, m, p]            = unpack_dims();
     auto [x, y, u, v, w]            = unpack_vars();
@@ -92,7 +92,7 @@ program_t::stats_t program_t::update(const scalar_t tau)
     {
         // predictor step
         update_residual(0.0);
-        stats.m_predictor_stats = solve();
+        stats.m_predictor_stats = solve(logger);
 
         const auto alpha_affine = std::min(make_umax(y, dy, 1.0), make_umax(u, du, 1.0));
         const auto miu          = y.dot(u);
@@ -113,7 +113,7 @@ program_t::stats_t program_t::update(const scalar_t tau)
         m_rcent.array() =
             u.array() * y.array() + dy.array() * du.array() - stats.m_sigma * miu / static_cast<scalar_t>(m);
 
-        stats.m_corrector_stats = solve();
+        stats.m_corrector_stats = solve(logger);
 
         if (!std::isfinite(stats.m_sigma) || !du.allFinite() || !dy.allFinite())
         {
@@ -133,7 +133,7 @@ program_t::stats_t program_t::update(const scalar_t tau)
     {
         // NB: no inequalities, solve the affine KKT system directly!
         update_residual(0.0);
-        stats.m_predictor_stats = solve();
+        stats.m_predictor_stats = solve(logger);
 
         stats.m_alpha = tau;
         stats.m_valid = true;
@@ -172,7 +172,8 @@ program_t::stats_t program_t::update(const scalar_t tau)
     return stats;
 }
 
-program_t::kkt_stats_t program_t::solve()
+program_t::kkt_stats_t program_t::solve(const logger_t& logger, const int refine_max_iters,
+                                        const scalar_t refine_epsilon)
 {
     const auto [n, m, p]       = unpack_dims();
     const auto [x, y, u, v, w] = unpack_vars();
@@ -194,6 +195,16 @@ program_t::kkt_stats_t program_t::solve()
     m_lvec.segment(n, p) = b4;
 
     m_lsol.vector() = m_solver.solve(m_lvec.vector());
+    for (auto iter = 0; iter < refine_max_iters; ++iter)
+    {
+        const auto residual = vector_t{m_lvec.vector() - m_lmat.matrix() * m_lsol.vector()};
+        logger.info("kkt refinement: iter=", iter, ",residual=", residual.lpNorm<2>(), ".\n");
+        if (residual.lpNorm<2>() < refine_epsilon || !residual.all_finite())
+        {
+            break;
+        }
+        m_lsol.vector() += m_solver.solve(residual.vector());
+    }
 
     const auto dx = m_lsol.segment(0, n);
     const auto dv = m_lsol.segment(n, p);
@@ -207,7 +218,7 @@ program_t::kkt_stats_t program_t::solve()
 
     // verify solution
     const auto valid    = m_lmat.all_finite() && m_lvec.all_finite() && m_lsol.all_finite();
-    const auto delta    = (m_lmat * m_lsol - m_lvec).lpNorm<Eigen::Infinity>();
+    const auto delta    = (m_lmat * m_lsol - m_lvec).lpNorm<2>() / (1.0 + m_lvec.lpNorm<2>());
     const auto rcond    = m_solver.rcond();
     const auto positive = m_solver.isPositive();
     const auto negative = m_solver.isNegative();
@@ -215,7 +226,7 @@ program_t::kkt_stats_t program_t::solve()
     return kkt_stats_t{delta, rcond, valid, positive, negative};
 }
 
-void program_t::update_solver()
+void program_t::update_solver(const scalar_t epsilon)
 {
     const auto [n, m, p]       = unpack_dims();
     const auto [x, y, u, v, w] = unpack_vars();
@@ -231,7 +242,11 @@ void program_t::update_solver()
     m_lmat.block(n, 0, p, n) = m_A.matrix();
     m_lmat.block(n, n, p, p) = matrix_t::zero(p, p);
 
+    m_lmat.diagonal().array() += epsilon;
+
     m_solver.compute(m_lmat.matrix());
+
+    m_lmat.diagonal().array() -= epsilon;
 }
 
 void program_t::update_original()

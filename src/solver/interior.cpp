@@ -8,7 +8,7 @@ solver_ipm_t::solver_ipm_t()
 {
     register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LE, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon", 0.0, LT, 1e-15, LE, 1e-6));
+    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon", 0.0, LT, 1e-18, LE, 1e-6));
 
     parameter("solver::max_evals") = 100;
 }
@@ -65,7 +65,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         const auto tau = 1.0 - (1.0 - tau0) / std::pow(static_cast<scalar_t>(iter), gamma);
 
         // predictor-corrector update of primal-dual variables
-        const auto stats = program.update(tau);
+        const auto stats = program.update(tau, logger);
 
         logger.info("predictor: precision=", stats.m_predictor_stats.m_precision,
                     ",rcond=", stats.m_predictor_stats.m_rcond, ",valid=", stats.m_predictor_stats.m_valid ? 'y' : 'n',
