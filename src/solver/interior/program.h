@@ -94,11 +94,12 @@ public:
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0);
 
-    void update_solver(scalar_t epsilon = 1e-11);
+    void update_solver(scalar_t epsilon = 1e-8);
     void update_original();
     void update_residual(scalar_t sigma);
+    void refine_solution(const logger_t& logger, int refine_max_iters = 50, scalar_t refine_epsilon = 1e-12);
 
-    kkt_stats_t solve(const logger_t& logger, int refine_max_iters = 5, scalar_t refine_epsilon = 1e-16);
+    kkt_stats_t solve(const logger_t& logger);
 
     scalar_t residual(scalar_t lstep);
 

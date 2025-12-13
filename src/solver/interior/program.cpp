@@ -94,6 +94,12 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
         update_residual(0.0);
         stats.m_predictor_stats = solve(logger);
 
+        if (!du.allFinite() || !dy.allFinite())
+        {
+            stats.m_valid = false;
+            return stats;
+        }
+
         const auto alpha_affine = std::min(make_umax(y, dy, 1.0), make_umax(u, du, 1.0));
         const auto miu          = y.dot(u);
         const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
@@ -172,8 +178,43 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
     return stats;
 }
 
-program_t::kkt_stats_t program_t::solve(const logger_t& logger, const int refine_max_iters,
-                                        const scalar_t refine_epsilon)
+void program_t::refine_solution(const logger_t& logger, const int refine_max_iters, const scalar_t refine_epsilon)
+{
+    auto residual   = vector_t{m_lsol.size()};
+    auto correction = vector_t{m_lsol.size()};
+    auto prev_error = std::numeric_limits<scalar_t>::max();
+
+    m_lsol.vector() = m_solver.solve(m_lvec.vector());
+
+    for (auto iter = 0; iter < refine_max_iters; ++iter)
+    {
+        residual = m_lvec.vector() - m_lmat.matrix() * m_lsol.vector();
+
+        const auto curr_error = residual.lpNorm<2>();
+        logger.info("kktrefine: iter=", iter, ",error=", curr_error, ".\n");
+
+        if (curr_error < refine_epsilon)
+        {
+            break;
+        }
+        if (curr_error > prev_error - refine_epsilon)
+        {
+            m_lsol.vector() -= correction.vector();
+            break;
+        }
+
+        correction.vector() = m_solver.solve(residual.vector());
+        if (!correction.all_finite())
+        {
+            break;
+        }
+
+        prev_error = curr_error;
+        m_lsol.vector() += correction.vector();
+    }
+}
+
+program_t::kkt_stats_t program_t::solve(const logger_t& logger)
 {
     const auto [n, m, p]       = unpack_dims();
     const auto [x, y, u, v, w] = unpack_vars();
@@ -194,17 +235,7 @@ program_t::kkt_stats_t program_t::solve(const logger_t& logger, const int refine
     m_lvec.segment(0, n) = b1 - m_G.transpose() * (a7.array() / y.array()).matrix();
     m_lvec.segment(n, p) = b4;
 
-    m_lsol.vector() = m_solver.solve(m_lvec.vector());
-    for (auto iter = 0; iter < refine_max_iters; ++iter)
-    {
-        const auto residual = vector_t{m_lvec.vector() - m_lmat.matrix() * m_lsol.vector()};
-        logger.info("kkt refinement: iter=", iter, ",residual=", residual.lpNorm<2>(), ".\n");
-        if (residual.lpNorm<2>() < refine_epsilon || !residual.all_finite())
-        {
-            break;
-        }
-        m_lsol.vector() += m_solver.solve(residual.vector());
-    }
+    refine_solution(logger);
 
     const auto dx = m_lsol.segment(0, n);
     const auto dv = m_lsol.segment(n, p);
@@ -218,7 +249,7 @@ program_t::kkt_stats_t program_t::solve(const logger_t& logger, const int refine
 
     // verify solution
     const auto valid    = m_lmat.all_finite() && m_lvec.all_finite() && m_lsol.all_finite();
-    const auto delta    = (m_lmat * m_lsol - m_lvec).lpNorm<2>() / (1.0 + m_lvec.lpNorm<2>());
+    const auto delta    = (m_lmat * m_lsol - m_lvec).lpNorm<2>();
     const auto rcond    = m_solver.rcond();
     const auto positive = m_solver.isPositive();
     const auto negative = m_solver.isNegative();

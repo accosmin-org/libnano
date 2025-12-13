@@ -8,7 +8,7 @@ solver_ipm_t::solver_ipm_t()
 {
     register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LE, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon", 0.0, LT, 1e-18, LE, 1e-6));
+    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon", 0.0, LT, 1e-16, LE, 1e-6));
 
     parameter("solver::max_evals") = 100;
 }
@@ -75,9 +75,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
                     ",rcond=", stats.m_corrector_stats.m_rcond, ",valid=", stats.m_corrector_stats.m_valid ? 'y' : 'n',
                     ".\n");
 
-        logger.info("tau=", tau, ",sigma=", stats.m_sigma, ",alpha=", stats.m_alpha, ".\n");
+        logger.info("statistic: tau=", tau, ",sigma=", stats.m_sigma, ",alpha=", stats.m_alpha, ".\n");
 
-        logger.info("res=", stats.m_primal_residual, "/", stats.m_dual_residual, ",gap=", stats.m_duality_gap, ".\n");
+        logger.info("statistic: res=", stats.m_primal_residual, "/", stats.m_dual_residual, ",gap=", stats.m_duality_gap, ".\n");
 
         if (!stats.m_valid)
         {
