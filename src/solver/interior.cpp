@@ -8,7 +8,8 @@ solver_ipm_t::solver_ipm_t()
 {
     register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LE, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon", 0.0, LT, 1e-16, LE, 1e-6));
+    register_parameter(parameter_t::make_scalar("solver::ipm::accuracy_epsilon", 0.0, LT, 1e-7, LE, 1e-6));
+    register_parameter(parameter_t::make_scalar("solver::ipm::residual_epsilon", 0.0, LT, 1e-15, LE, 1e-6));
 
     parameter("solver::max_evals") = 100;
 }
@@ -49,10 +50,11 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
 
 solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& logger) const
 {
-    const auto tau0      = parameter("solver::ipm::tau0").value<scalar_t>();
-    const auto gamma     = parameter("solver::ipm::gamma").value<scalar_t>();
-    const auto epsilon   = parameter("solver::ipm::epsilon").value<scalar_t>();
-    const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
+    const auto tau0             = parameter("solver::ipm::tau0").value<scalar_t>();
+    const auto gamma            = parameter("solver::ipm::gamma").value<scalar_t>();
+    const auto accuracy_epsilon = parameter("solver::ipm::accuracy_epsilon").value<scalar_t>();
+    const auto residual_epsilon = parameter("solver::ipm::residual_epsilon").value<scalar_t>();
+    const auto max_evals        = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& function = program.function();
 
@@ -67,11 +69,11 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         // predictor-corrector update of primal-dual variables
         const auto stats = program.update(tau, logger);
 
-        logger.info("predictor: precision=", stats.m_predictor_stats.m_precision,
+        logger.info("predictor: accuracy=", stats.m_predictor_stats.m_accuracy,
                     ",rcond=", stats.m_predictor_stats.m_rcond, ",valid=", stats.m_predictor_stats.m_valid ? 'y' : 'n',
                     ".\n");
 
-        logger.info("corrector: precision=", stats.m_corrector_stats.m_precision,
+        logger.info("corrector: accuracy=", stats.m_corrector_stats.m_accuracy,
                     ",rcond=", stats.m_corrector_stats.m_rcond, ",valid=", stats.m_corrector_stats.m_valid ? 'y' : 'n',
                     ".\n");
 
@@ -84,7 +86,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
             logger.info("stopping as line-search step failed!\n");
             break;
         }
-        if (stats.m_predictor_stats.m_precision > 1e-6 || stats.m_corrector_stats.m_precision > 1e-6)
+        if (std::max(stats.m_predictor_stats.m_accuracy, stats.m_corrector_stats.m_accuracy) > accuracy_epsilon)
         {
             logger.info("stopping as the KKT system wasn't solved precisely!\n");
             break;
@@ -106,7 +108,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // check convergence
-        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < epsilon)
+        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < residual_epsilon)
         {
             logger.info("stopping as the residuals and the duality gaps are too small!\n");
             break;

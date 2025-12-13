@@ -69,7 +69,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     /*// move towards the center of the feasibility set to improve convergence: see (1), p. 485
     update_solver();
     update_residual(0.0);
-    solve();
+    solve(logger_t{});
 
     y.array() = (y + dy).array().abs().max(1.0);
     u.array() = (u + du).array().abs().max(1.0);
@@ -104,16 +104,7 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
         const auto miu          = y.dot(u);
         const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
 
-        assert(std::isfinite(miu));
-        assert(std::isfinite(miu_affine));
-
         stats.m_sigma = std::clamp(std::pow(miu_affine / miu, 3.0), 0.0, 1.0);
-
-        if (!std::isfinite(stats.m_sigma) || !du.allFinite() || !dy.allFinite())
-        {
-            stats.m_valid = false;
-            return stats;
-        }
 
         // corrector step
         m_rcent.array() =
@@ -121,7 +112,7 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
 
         stats.m_corrector_stats = solve(logger);
 
-        if (!std::isfinite(stats.m_sigma) || !du.allFinite() || !dy.allFinite())
+        if (!du.allFinite() || !dy.allFinite())
         {
             stats.m_valid = false;
             return stats;
@@ -171,9 +162,9 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
     stats.m_duality_gap = std::fabs(                     ///<
         x.dot(m_Q * x + m_c) + m_b.dot(v) + m_h.dot(w)); ///<
 
-    stats.m_primal_residual = stats.m_primal_residual * (1.0 + normA + normG);
-    stats.m_dual_residual   = stats.m_dual_residual * (1.0 + normQ + normA + normG);
-    stats.m_duality_gap     = stats.m_duality_gap * (1.0 + normQ + normA + normG);
+    stats.m_primal_residual *= 1.0 + normA + normG;
+    stats.m_dual_residual *= 1.0 + normQ + normA + normG;
+    stats.m_duality_gap *= 1.0 + normQ + normA + normG;
 
     return stats;
 }
@@ -188,7 +179,7 @@ void program_t::refine_solution(const logger_t& logger, const int refine_max_ite
 
     for (auto iter = 0; iter < refine_max_iters; ++iter)
     {
-        residual = m_lvec.vector() - m_lmat.matrix() * m_lsol.vector();
+        residual = m_lvec - m_lmat * m_lsol;
 
         const auto curr_error = residual.lpNorm<2>();
         logger.info("kktrefine: iter=", iter, ",error=", curr_error, ".\n");
@@ -199,7 +190,7 @@ void program_t::refine_solution(const logger_t& logger, const int refine_max_ite
         }
         if (curr_error > prev_error - refine_epsilon)
         {
-            m_lsol.vector() -= correction.vector();
+            m_lsol -= correction;
             break;
         }
 
@@ -210,7 +201,7 @@ void program_t::refine_solution(const logger_t& logger, const int refine_max_ite
         }
 
         prev_error = curr_error;
-        m_lsol.vector() += correction.vector();
+        m_lsol += correction;
     }
 }
 
@@ -249,15 +240,16 @@ program_t::kkt_stats_t program_t::solve(const logger_t& logger)
 
     // verify solution
     const auto valid    = m_lmat.all_finite() && m_lvec.all_finite() && m_lsol.all_finite();
-    const auto delta    = (m_lmat * m_lsol - m_lvec).lpNorm<2>();
+    const auto accuracy = (m_lmat * m_lsol - m_lvec).lpNorm<2>();
     const auto rcond    = m_solver.rcond();
     const auto positive = m_solver.isPositive();
     const auto negative = m_solver.isNegative();
 
-    return kkt_stats_t{delta, rcond, valid, positive, negative};
+    return kkt_stats_t{
+        .m_accuracy = accuracy, .m_rcond = rcond, .m_valid = valid, .m_positive = positive, .m_negative = negative};
 }
 
-void program_t::update_solver(const scalar_t epsilon)
+void program_t::update_solver(const scalar_t)
 {
     const auto [n, m, p]       = unpack_dims();
     const auto [x, y, u, v, w] = unpack_vars();
@@ -273,11 +265,7 @@ void program_t::update_solver(const scalar_t epsilon)
     m_lmat.block(n, 0, p, n) = m_A.matrix();
     m_lmat.block(n, n, p, p) = matrix_t::zero(p, p);
 
-    m_lmat.diagonal().array() += epsilon;
-
     m_solver.compute(m_lmat.matrix());
-
-    m_lmat.diagonal().array() -= epsilon;
 }
 
 void program_t::update_original()

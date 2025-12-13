@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <Eigen/IterativeLinearSolvers>
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
 #include <nano/function/util.h>
@@ -70,7 +71,7 @@ public:
     ///
     struct kkt_stats_t
     {
-        scalar_t m_precision{0.0};  ///< precision with which the linear system of equations was solved
+        scalar_t m_accuracy{0.0};   ///< accuracy with which the linear system of equations was solved
         scalar_t m_rcond{0.0};      ///< estimation of the reciprocal condition of the matrix to decompose
         bool     m_valid{false};    ///< indicates if the updates are finite
         bool     m_positive{false}; ///< is the original matrix positive semidefinite?
@@ -94,10 +95,11 @@ public:
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0);
 
-    void update_solver(scalar_t epsilon = 1e-8);
+    void update_solver(scalar_t epsilon = 1e-11);
     void update_original();
     void update_residual(scalar_t sigma);
-    void refine_solution(const logger_t& logger, int refine_max_iters = 50, scalar_t refine_epsilon = 1e-12);
+
+    void refine_solution(const logger_t& logger, int refine_max_iters = 50, scalar_t refine_epsilon = 1e-13);
 
     kkt_stats_t solve(const logger_t& logger);
 
@@ -130,6 +132,11 @@ private:
     }
 
     using kkt_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
+
+    // using kkt_solver_t = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>, Eigen::DiagonalPreconditioner<scalar_t>>;
+
+    // using kkt_solver_t = Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper,
+    //                                               Eigen::DiagonalPreconditioner<scalar_t>>;
 
     // attributes
     const function_t& m_function; ///< original function to minimize
