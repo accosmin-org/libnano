@@ -169,28 +169,38 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
     return stats;
 }
 
-void program_t::refine_solution(const logger_t& logger, const int refine_max_iters, const scalar_t refine_epsilon)
+void program_t::refine_solution(const logger_t& logger, const int refine_max_iters, const scalar_t refine_epsilon,
+                                const int patience)
 {
-    auto residual   = vector_t{m_lsol.size()};
-    auto correction = vector_t{m_lsol.size()};
-    auto prev_error = std::numeric_limits<scalar_t>::max();
+    auto solution      = vector_t{m_lsol.size()};
+    auto residual      = vector_t{m_lsol.size()};
+    auto correction    = vector_t{m_lsol.size()};
+    auto best_solution = vector_t{m_lsol.size()};
+    auto best_accuracy = std::numeric_limits<scalar_t>::max();
 
-    m_lsol.vector() = m_solver.solve(m_lvec.vector());
+    solution.vector() = m_solver.solve(m_lvec.vector());
 
-    for (auto iter = 0; iter < refine_max_iters; ++iter)
+    for (auto iter = 0, best_last_iter = 0; iter < refine_max_iters; ++iter)
     {
-        residual = m_lvec - m_lmat * m_lsol;
+        residual = m_lvec - m_lmat * solution;
 
-        const auto curr_error = residual.lpNorm<2>();
-        logger.info("kktrefine: iter=", iter, ",error=", curr_error, ".\n");
+        const auto accuracy = residual.lpNorm<2>();
+        logger.info("kktrefine: iter=", iter, ",accuracy=", accuracy, ".\n");
 
-        if (curr_error < refine_epsilon)
+        if (accuracy < best_accuracy)
+        {
+            best_accuracy = accuracy;
+            best_solution = solution;
+            best_last_iter = iter;
+        }
+        if (accuracy < refine_epsilon)
         {
             break;
         }
-        if (curr_error > prev_error - refine_epsilon)
+
+        ++best_last_iter;
+        if (best_last_iter > patience)
         {
-            m_lsol -= correction;
             break;
         }
 
@@ -200,9 +210,10 @@ void program_t::refine_solution(const logger_t& logger, const int refine_max_ite
             break;
         }
 
-        prev_error = curr_error;
-        m_lsol += correction;
+        solution += correction;
     }
+
+    m_lsol = best_solution;
 }
 
 program_t::kkt_stats_t program_t::solve(const logger_t& logger)
@@ -249,7 +260,7 @@ program_t::kkt_stats_t program_t::solve(const logger_t& logger)
         .m_accuracy = accuracy, .m_rcond = rcond, .m_valid = valid, .m_positive = positive, .m_negative = negative};
 }
 
-void program_t::update_solver(const scalar_t)
+void program_t::update_solver()
 {
     const auto [n, m, p]       = unpack_dims();
     const auto [x, y, u, v, w] = unpack_vars();
