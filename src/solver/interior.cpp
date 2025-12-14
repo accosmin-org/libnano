@@ -10,7 +10,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LE, 2.0, LE, 5.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::accuracy_epsilon", 0.0, LT, 1e-7, LE, 1e-6));
     register_parameter(parameter_t::make_scalar("solver::ipm::residual_epsilon", 0.0, LT, 1e-18, LE, 1e-6));
-    register_parameter(parameter_t::make_integer("solver::ipm::residual_patience", 0, LT, 5, LE, 100));
+    register_parameter(parameter_t::make_integer("solver::ipm::residual_patience", 0, LT, 7, LE, 100));
 
     parameter("solver::max_evals") = 100;
 }
