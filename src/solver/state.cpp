@@ -137,6 +137,12 @@ void solver_state_t::update_duals()
     m_dual.m_kkt3 = (-m_dual.m_u.array()).max(0.0).matrix().lpNorm<Eigen::Infinity>();
     m_dual.m_kkt4 = (m_dual.m_u.array() * m_dual.m_du.array()).matrix().lpNorm<Eigen::Infinity>();
     m_dual.m_kkt5 = m_dual.m_gL.lpNorm<Eigen::Infinity>();
+
+    m_dual.m_kkt1 /= 1.0 + std::fabs(m_fx);
+    m_dual.m_kkt2 /= 1.0 + std::fabs(m_fx);
+    m_dual.m_kkt3 /= 1.0 + std::fabs(m_fx);
+    m_dual.m_kkt4 /= 1.0 + std::fabs(m_fx);
+    m_dual.m_kkt5 /= 1.0 + std::fabs(m_fx);
 }
 
 scalar_t solver_state_t::value_test(const tensor_size_t patience) const

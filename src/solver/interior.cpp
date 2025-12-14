@@ -125,7 +125,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         else
         {
             ++best_iteration;
-            if (best_iteration > residual_patience)
+            if (best_iteration >= residual_patience)
             {
                 logger.info("stopping as the KKT optimality conditions haven't improved in the past iterations.\n");
                 break;

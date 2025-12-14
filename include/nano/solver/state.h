@@ -101,7 +101,8 @@ public:
     /// test 4: lambda_i * g_i(x) == 0
     /// test 5: grad(f(x)) + sum(lambda_i * grad(g_i(x))) + sum(miu_j * h_j(x)) == 0
     //
-    /// NB: the optimality test is the maximum of the infinite norm of the 5 vector conditions.
+    /// NB: the optimality test is the maximum of the infinite norm of the 5 vector conditions
+    ///     normalized to the function value.
     /// NB: only appropriate for constrained smooth problems.
     ///
     scalar_t kkt_optimality_test1() const { return m_dual.m_kkt1; }

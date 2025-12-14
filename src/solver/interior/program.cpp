@@ -100,7 +100,7 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
             return stats;
         }
 
-        const auto alpha_affine = std::min(make_umax(y, dy, 1.0), make_umax(u, du, 1.0));
+        const auto alpha_affine = std::min(make_umax(y, dy, tau), make_umax(u, du, tau));
         const auto miu          = y.dot(u);
         const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
 
@@ -122,7 +122,6 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
         const auto pstep = make_umax(y, dy, tau);
         const auto dstep = make_umax(u, du, tau);
 
-        // std::tie(stats.m_alpha, stats.m_valid) = lsearch(std::min(pstep, dstep));
         stats.m_alpha = std::min(pstep, dstep);
         stats.m_valid = true;
     }
@@ -230,7 +229,7 @@ void program_t::refine_solution(const logger_t& logger, const int max_iters, con
         else
         {
             ++best_iteration;
-            if (best_iteration > patience)
+            if (best_iteration >= patience)
             {
                 break;
             }
