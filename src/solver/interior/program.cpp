@@ -57,7 +57,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
 
     // initialize: see (2), p. 613, u = -1 / (G * x - h) = 1 / y
-    auto [x, y, u, v, w] = unpack_vars();
+    auto [x, y, u, v, w]                       = unpack_vars();
     [[maybe_unused]] auto [dx, dy, du, dv, dw] = unpack_delta();
 
     x.array() = x0.array();

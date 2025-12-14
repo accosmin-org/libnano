@@ -51,17 +51,17 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
 
 solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& logger) const
 {
-    const auto tau0             = parameter("solver::ipm::tau0").value<scalar_t>();
-    const auto gamma            = parameter("solver::ipm::gamma").value<scalar_t>();
-    const auto accuracy_epsilon = parameter("solver::ipm::accuracy_epsilon").value<scalar_t>();
-    const auto residual_epsilon = parameter("solver::ipm::residual_epsilon").value<scalar_t>();
+    const auto tau0              = parameter("solver::ipm::tau0").value<scalar_t>();
+    const auto gamma             = parameter("solver::ipm::gamma").value<scalar_t>();
+    const auto accuracy_epsilon  = parameter("solver::ipm::accuracy_epsilon").value<scalar_t>();
+    const auto residual_epsilon  = parameter("solver::ipm::residual_epsilon").value<scalar_t>();
     const auto residual_patience = parameter("solver::ipm::residual_patience").value<tensor_size_t>();
-    const auto max_evals        = parameter("solver::max_evals").value<tensor_size_t>();
+    const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& function = program.function();
 
-    auto bstate = solver_state_t{function, program.original_x()}; ///< best state (KKT optimality criterion-wise)
-    auto cstate = bstate;                                         ///< current state
+    auto bstate        = solver_state_t{function, program.original_x()}; ///< best state (KKT optimality criterion-wise)
+    auto cstate        = bstate;                                         ///< current state
     auto best_residual = std::numeric_limits<scalar_t>::max();
 
     // primal-dual interior-point solver...
@@ -82,7 +82,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
 
         logger.info("statistic: tau=", tau, ",sigma=", stats.m_sigma, ",alpha=", stats.m_alpha, ".\n");
 
-        logger.info("statistic: res=", stats.m_primal_residual, "/", stats.m_dual_residual, ",gap=", stats.m_duality_gap, ".\n");
+        logger.info("statistic: res=", stats.m_primal_residual, "/", stats.m_dual_residual,
+                    ",gap=", stats.m_duality_gap, ".\n");
 
         if (!stats.m_valid)
         {
