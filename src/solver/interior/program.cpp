@@ -147,30 +147,59 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
     update_original();
 
     // compute convergence criteria
-    const auto normQ = m_dQ.lpNorm<Eigen::Infinity>();
-    const auto normA = m_dA.lpNorm<Eigen::Infinity>();
-    const auto normG = m_dG.lpNorm<Eigen::Infinity>();
-
-    stats.m_primal_residual =                          ///<
-        (m_A * x - m_b).lpNorm<Eigen::Infinity>() +    ///<
-        (m_G * x + y - m_h).lpNorm<Eigen::Infinity>(); ///<
-
-    stats.m_dual_residual =                                                                     ///<
-        (m_Q * x + m_c + m_A.transpose() * v + m_G.transpose() * w).lpNorm<Eigen::Infinity>() + ///<
-        (w - u).lpNorm<Eigen::Infinity>();                                                      ///<
-
-    stats.m_duality_gap = std::fabs(                     ///<
-        x.dot(m_Q * x + m_c) + m_b.dot(v) + m_h.dot(w)); ///<
-
-    stats.m_primal_residual *= 1.0 + normA + normG;
-    stats.m_dual_residual *= 1.0 + normQ + normA + normG;
-    stats.m_duality_gap *= 1.0 + normQ + normA + normG;
+    stats.m_primal_residual = primal_residual();
+    stats.m_dual_residual   = dual_residual();
+    stats.m_duality_gap     = duality_gap();
 
     return stats;
 }
 
-void program_t::refine_solution(const logger_t& logger, const int refine_max_iters, const scalar_t refine_epsilon,
-                                const int patience)
+scalar_t program_t::primal_residual()
+{
+    [[maybe_unused]] const auto [x, y, u, v, w] = unpack_vars();
+
+    const auto res1 = (m_A * x - m_b).lpNorm<Eigen::Infinity>();
+    const auto res2 = (m_G * x + y - m_h).lpNorm<Eigen::Infinity>();
+
+    const auto nom1 = (m_A * x).lpNorm<Eigen::Infinity>();
+    const auto nom2 = m_b.lpNorm<Eigen::Infinity>();
+    const auto nom3 = (m_G * x).lpNorm<Eigen::Infinity>();
+    const auto nom4 = m_h.lpNorm<Eigen::Infinity>();
+    const auto nom5 = y.lpNorm<Eigen::Infinity>();
+
+    return std::max(res1, res2) / (1.0 + std::max({nom1, nom2, nom3, nom4, nom5}));
+}
+
+scalar_t program_t::dual_residual()
+{
+    [[maybe_unused]] const auto [x, y, u, v, w] = unpack_vars();
+
+    const auto res1 = (m_Q * x + m_c + m_A.transpose() * v + m_G.transpose() * w).lpNorm<Eigen::Infinity>();
+    const auto res2 = (w - u).lpNorm<Eigen::Infinity>();
+
+    const auto nom1 = (m_Q * x).lpNorm<Eigen::Infinity>();
+    const auto nom2 = (m_A.transpose() * v).lpNorm<Eigen::Infinity>();
+    const auto nom3 = (m_G.transpose() * w).lpNorm<Eigen::Infinity>();
+    const auto nom4 = m_c.lpNorm<Eigen::Infinity>();
+
+    return std::max(res1, res2) / (1.0 + std::max({nom1, nom2, nom3, nom4}));
+}
+
+scalar_t program_t::duality_gap()
+{
+    [[maybe_unused]] const auto [x, y, u, v, w] = unpack_vars();
+
+    const auto res1 = std::fabs(x.dot(m_Q * x + m_c) + m_b.dot(v) + m_h.dot(w));
+
+    const auto nom1 = std::fabs(x.dot(m_Q * x));
+    const auto nom2 = std::fabs(x.dot(m_c.vector()));
+    const auto nom3 = std::fabs(m_b.dot(v));
+    const auto nom4 = std::fabs(m_h.dot(w));
+
+    return res1 / (1.0 + std::max({nom1, nom2, nom3, nom4}));
+}
+
+void program_t::refine_solution(const logger_t& logger, const int max_iters, const scalar_t epsilon, const int patience)
 {
     auto solution      = vector_t{m_lsol.size()};
     auto residual      = vector_t{m_lsol.size()};
@@ -180,28 +209,31 @@ void program_t::refine_solution(const logger_t& logger, const int refine_max_ite
 
     solution.vector() = m_solver.solve(m_lvec.vector());
 
-    for (auto iter = 0, best_last_iter = 0; iter < refine_max_iters; ++iter)
+    for (auto iter = 0, best_iteration = 0; iter < max_iters; ++iter)
     {
         residual = m_lvec - m_lmat * solution;
 
         const auto accuracy = residual.lpNorm<2>();
         logger.info("kktrefine: iter=", iter, ",accuracy=", accuracy, ".\n");
 
-        if (accuracy < best_accuracy)
+        if (accuracy < epsilon)
         {
-            best_accuracy = accuracy;
             best_solution = solution;
-            best_last_iter = iter;
-        }
-        if (accuracy < refine_epsilon)
-        {
             break;
         }
-
-        ++best_last_iter;
-        if (best_last_iter > patience)
+        else if (accuracy < best_accuracy)
         {
-            break;
+            best_accuracy  = accuracy;
+            best_solution  = solution;
+            best_iteration = 0;
+        }
+        else
+        {
+            ++best_iteration;
+            if (best_iteration > patience)
+            {
+                break;
+            }
         }
 
         correction.vector() = m_solver.solve(residual.vector());
@@ -311,66 +343,4 @@ void program_t::update_residual(const scalar_t sigma)
 
         m_rcent.array() = u.array() * y.array() - sigma * y.dot(u) / static_cast<scalar_t>(m);
     }
-}
-
-scalar_t program_t::residual(const scalar_t lstep)
-{
-    const auto [n, m, p]            = unpack_dims();
-    const auto [x, y, u, v, w]      = unpack_vars();
-    const auto [dx, dy, du, dv, dw] = unpack_delta();
-
-    auto residual = 0.0;
-
-    // dual residual
-    m_rdual.segment(0, n).matrix() = m_Q * (x + lstep * dx) + m_c;
-    m_rdual.segment(0, n) += m_A.transpose() * (v + lstep * dv);
-    m_rdual.segment(0, n) += m_G.transpose() * (w + lstep * dw);
-    m_rdual.segment(n, m) = (w + lstep * dw) - (u + lstep * du);
-
-    residual += m_rdual.lpNorm<2>() / (1.0 + m_c.lpNorm<2>());
-
-    // primal residual
-    m_rprim.segment(0, p) = m_A * (x + lstep * dx) - m_b;
-
-    residual += m_rprim.segment(0, p).lpNorm<2>() / (1.0 + m_b.lpNorm<2>());
-
-    m_rprim.segment(p, m) = m_G * (x + lstep * dx) + (y + lstep * dy) - m_h;
-
-    residual += m_rprim.segment(p, m).lpNorm<2>() / (1.0 + m_h.lpNorm<2>());
-
-    // centering residual
-    if (m > 0)
-    {
-        assert((y + lstep * dy).minCoeff() > 0.0);
-        assert((u + lstep * du).minCoeff() > 0.0);
-
-        residual += std::sqrt((y + lstep * dy).dot(u + lstep * du));
-    }
-
-    return residual;
-}
-
-std::tuple<scalar_t, bool> program_t::lsearch(const scalar_t lstep0)
-{
-    const auto residual0 = residual(0.0);
-
-    const auto max_iters = 100;
-    const auto beta      = 0.9;
-    const auto alpha     = 1e-6;
-
-    auto valid = false;
-    auto lstep = lstep0;
-
-    for (auto iter = 0; iter < max_iters; ++iter)
-    {
-        if (const auto residualX = residual(lstep); residualX < (1.0 - lstep * alpha) * residual0)
-        {
-            valid = true;
-            break;
-        }
-
-        lstep *= beta;
-    }
-
-    return std::make_tuple(lstep, valid);
 }

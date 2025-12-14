@@ -9,7 +9,8 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::tau0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LE, 2.0, LE, 5.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::accuracy_epsilon", 0.0, LT, 1e-7, LE, 1e-6));
-    register_parameter(parameter_t::make_scalar("solver::ipm::residual_epsilon", 0.0, LT, 1e-15, LE, 1e-6));
+    register_parameter(parameter_t::make_scalar("solver::ipm::residual_epsilon", 0.0, LT, 1e-18, LE, 1e-6));
+    register_parameter(parameter_t::make_integer("solver::ipm::residual_patience", 0, LT, 5, LE, 100));
 
     parameter("solver::max_evals") = 100;
 }
@@ -54,15 +55,17 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     const auto gamma            = parameter("solver::ipm::gamma").value<scalar_t>();
     const auto accuracy_epsilon = parameter("solver::ipm::accuracy_epsilon").value<scalar_t>();
     const auto residual_epsilon = parameter("solver::ipm::residual_epsilon").value<scalar_t>();
+    const auto residual_patience = parameter("solver::ipm::residual_patience").value<tensor_size_t>();
     const auto max_evals        = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& function = program.function();
 
     auto bstate = solver_state_t{function, program.original_x()}; ///< best state (KKT optimality criterion-wise)
     auto cstate = bstate;                                         ///< current state
+    auto best_residual = std::numeric_limits<scalar_t>::max();
 
     // primal-dual interior-point solver...
-    for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
+    for (tensor_size_t iter = 1, best_iteration = 0; function.fcalls() + function.gcalls() < max_evals; ++iter)
     {
         const auto tau = 1.0 - (1.0 - tau0) / std::pow(static_cast<scalar_t>(iter), gamma);
 
@@ -108,10 +111,25 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // check convergence
-        if (std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap}) < residual_epsilon)
+        const auto residual = std::max({stats.m_primal_residual, stats.m_dual_residual, stats.m_duality_gap});
+        if (residual < residual_epsilon)
         {
             logger.info("stopping as the residuals and the duality gaps are too small!\n");
             break;
+        }
+        else if (residual < best_residual)
+        {
+            best_residual  = residual;
+            best_iteration = 0;
+        }
+        else
+        {
+            ++best_iteration;
+            if (best_iteration > residual_patience)
+            {
+                logger.info("stopping as the KKT optimality conditions haven't improved in the past iterations.\n");
+                break;
+            }
         }
     }
 
