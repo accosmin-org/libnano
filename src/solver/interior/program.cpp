@@ -307,7 +307,15 @@ void program_t::update_solver()
     m_lmat.block(n, 0, p, n) = m_A.matrix();
     m_lmat.block(n, n, p, p) = matrix_t::zero(p, p);
 
+    const auto epsilon = 1e-15;
+
+    m_lmat.diagonal().segment(0, n).array() += epsilon;
+    m_lmat.diagonal().segment(n, p).array() -= epsilon;
+
     m_solver.compute(m_lmat.matrix());
+
+    m_lmat.diagonal().segment(0, n).array() -= epsilon;
+    m_lmat.diagonal().segment(n, p).array() += epsilon;
 }
 
 void program_t::update_original()

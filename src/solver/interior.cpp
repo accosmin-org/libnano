@@ -103,7 +103,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         // update best state (if possible and an improvement)
         if (!cstate.valid())
         {
-            logger.error("invalid current state after update!\n");
+            logger.error("stopping with invalid current state after update!\n");
             break;
         }
         else if (iter == 1 || cstate.kkt_optimality_test() < bstate.kkt_optimality_test())

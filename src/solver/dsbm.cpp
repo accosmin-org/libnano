@@ -8,6 +8,7 @@ solver_dsbm_t::solver_dsbm_t()
 {
     register_parameter(parameter_t::make_scalar("solver::dsbm::ml", 0, LT, 0.2, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::dsbm::mf", 0, LT, 0.5, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::dsbm::nu_one", 0, LT, 1.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar_pair("solver::dsbm::tau_min_tau_one", 0, LT, 1e-6, LE, 1.0, LE, 1e+6));
 
     const auto prefix = string_t{"solver::dsbm"};
@@ -29,6 +30,7 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
     const auto epsilon         = parameter("solver::epsilon").value<scalar_t>();
     const auto ml              = parameter("solver::dsbm::ml").value<scalar_t>();
     const auto mf              = parameter("solver::dsbm::mf").value<scalar_t>();
+    const auto nu1             = parameter("solver::dsbm::nu_one").value<scalar_t>();
     const auto [tau_min, tau1] = parameter("solver::dsbm::tau_min_tau_one").value_pair<scalar_t>();
 
     auto state  = solver_state_t{function, x0};
@@ -36,23 +38,18 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
 
     auto tau  = tau1;
     auto gxk1 = vector_t{function.size()};
-    // FIXME: can it be done without a lower limit of the optimum?!
-    // auto nuL  = 1.0 + std::fabs(state.fx());                // NB: assumes no known lower bound
-    // auto flow = std::numeric_limits<scalar_t>::quiet_NaN(); // NB: assumes no known lower bound
-
-    auto flow = -100.0;
-    auto nuL  = (1.0 - ml) * (bundle.fx() - flow);
+    auto flow = std::numeric_limits<scalar_t>::infinity();
+    auto nuL  = nu1;
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         const auto tol_delta = epsilon * (1.0 + std::fabs(bundle.fx()));
         const auto tol_error = epsilon * (1.0 + std::fabs(bundle.fx()));
-        const auto tol_agrad = epsilon * 1e+2 * (1.0 + std::fabs(bundle.fx()));
-
-        // FIXME: flow is not correct (-12.xxx) -> it should be <= -16!!!
+        const auto tol_gnorm = epsilon * 1e+2 * (1.0 + std::fabs(bundle.fx()));
 
         state.update_calls();
-        logger.info(state, ",flow=", flow, ",tau=", tau, ",nuL=", nuL, ",delta=", (bundle.fx() - flow),
+        logger.info(state, ".\n");
+        logger.info("proximal: flow=", flow, ",tau=", tau, ",nuL=", nuL, ",delta=", (bundle.fx() - flow),
                     ",bsize=", bundle.size(), ".\n");
 
         // first stopping criterion: optimality gap test
@@ -62,6 +59,7 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
             const auto converged = true;
             if (solver_t::done_specific_test(state, iter_ok, converged, logger))
             {
+                logger.info("stopping with the optimality gap criterion: delta=", delta, "<", tol_delta, ".\n");
                 break;
             }
         }
@@ -70,8 +68,8 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
         const auto  level    = bundle.fx() - nuL;
         const auto& proximal = bundle.solve(tau, level, logger);
 
-        logger.info("level=", level, ",fxhat=", bundle.fhat(bundle.x()), ",fx1hat=", bundle.fhat(proximal.m_x),
-                    ",r=", proximal.m_r, ",status=", scat(proximal.m_status), ".\n");
+        logger.info("proximal: level=", level, ",fxhat=", bundle.fhat(bundle.x()),
+                    ",fx1hat=", bundle.fhat(proximal.m_x), ",r=", proximal.m_r, ".\n");
 
         if (proximal.m_status != solver_status::kkt_optimality_test)
         {
@@ -87,15 +85,18 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
         const auto  nuT   = bundle.fx() - proximal.m_r;
         const auto  agrad = (bundle.x() - xk1) / (tau * miu);
         const auto  error = nuT - tau * miu * agrad.squaredNorm();
+        const auto  gnorm = agrad.norm();
 
-        // TODO: check consistency conditions (error >0, eq. 12-14)
+        logger.info("proximal: aggregation: error=", error, ",gnorm=", gnorm, ".\n");
 
-        if (error <= tol_error && agrad.norm() <= tol_agrad)
+        if (error <= tol_error && gnorm <= tol_gnorm)
         {
             const auto iter_ok   = state.valid();
             const auto converged = true;
             if (solver_t::done_specific_test(state, iter_ok, converged, logger))
             {
+                logger.info("stopping with the aggregation criterion: error=", error, "<", tol_error, ",gnorm=", gnorm,
+                            "<", tol_gnorm, ".\n");
                 break;
             }
         }
@@ -103,7 +104,7 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
         // update state and bundle
         if (const auto fxk1 = function(xk1, gxk1); fxk1 <= bundle.fx() - mf * nuT)
         {
-            logger.info("descent step...\n");
+            logger.info("proximal: fxk1=", fxk1, " (descent step)...\n");
 
             // descent step: update center
             tau = tau * miu;
@@ -114,7 +115,7 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
         }
         else
         {
-            logger.info("null step...\n");
+            logger.info("proximal: fxk1=", fxk1, " (null step)...\n");
 
             // null step: update bundle model
             if (miu > 1.0)
