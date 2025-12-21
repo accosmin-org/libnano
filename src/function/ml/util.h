@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/enum.h>
 #include <nano/tensor.h>
 
 namespace nano
@@ -22,5 +23,20 @@ inline tensor_size_t make_outputs([[maybe_unused]] const tensor_size_t dims)
 inline tensor_size_t make_samples(const tensor_size_t dims, const scalar_t sratio)
 {
     return static_cast<tensor_size_t>(std::max(sratio * static_cast<scalar_t>(dims), 10.0));
+}
+
+enum class optimization_type : uint8_t
+{
+    constrained,
+    unconstrained,
+};
+
+template <>
+inline enum_map_t<optimization_type> enum_string<optimization_type>()
+{
+    return {
+        {  optimization_type::constrained,   "constrained"},
+        {optimization_type::unconstrained, "unconstrained"},
+    };
 }
 } // namespace nano
