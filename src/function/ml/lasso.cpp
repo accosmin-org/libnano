@@ -1,33 +1,11 @@
-#include <function/mlearn/lasso.h>
+#include <function/ml/lasso.h>
+#include <function/ml/util.h>
 #include <nano/core/strutil.h>
 
 using namespace nano;
 
-namespace
-{
-auto make_size(const tensor_size_t dims)
-{
-    return std::max(dims, tensor_size_t{2});
-}
-
-auto make_inputs(const tensor_size_t dims)
-{
-    return std::max(dims, tensor_size_t{2});
-}
-
-auto make_outputs(const tensor_size_t)
-{
-    return tensor_size_t{1};
-}
-
-auto make_samples(const tensor_size_t dims, const scalar_t sratio)
-{
-    return static_cast<tensor_size_t>(std::max(sratio * static_cast<scalar_t>(dims), 10.0));
-}
-} // namespace
-
 template <class tloss>
-function_lasso_t<tloss>::function_lasso_t(const tensor_size_t dims, const uint64_t seed, const scalar_t alpha1,
+lasso_function_t<tloss>::lasso_function_t(const tensor_size_t dims, const uint64_t seed, const scalar_t alpha1,
                                           const scalar_t sratio, const tensor_size_t modulo)
     : function_t(scat(tloss::basename, "+lasso"), ::make_size(dims))
     , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), seed, modulo, tloss::regression)
@@ -43,13 +21,13 @@ function_lasso_t<tloss>::function_lasso_t(const tensor_size_t dims, const uint64
 }
 
 template <class tloss>
-rfunction_t function_lasso_t<tloss>::clone() const
+rfunction_t lasso_function_t<tloss>::clone() const
 {
-    return std::make_unique<function_lasso_t<tloss>>(*this);
+    return std::make_unique<lasso_function_t<tloss>>(*this);
 }
 
 template <class tloss>
-string_t function_lasso_t<tloss>::do_name() const
+string_t lasso_function_t<tloss>::do_name() const
 {
     const auto seed   = parameter("function::seed").template value<uint64_t>();
     const auto alpha1 = parameter("function::lasso::alpha1").template value<scalar_t>();
@@ -60,7 +38,7 @@ string_t function_lasso_t<tloss>::do_name() const
 }
 
 template <class tloss>
-scalar_t function_lasso_t<tloss>::do_eval(eval_t eval) const
+scalar_t lasso_function_t<tloss>::do_eval(eval_t eval) const
 {
     const auto alpha1 = parameter("function::lasso::alpha1").template value<scalar_t>();
 
@@ -76,18 +54,18 @@ scalar_t function_lasso_t<tloss>::do_eval(eval_t eval) const
 }
 
 template <class tloss>
-rfunction_t function_lasso_t<tloss>::make(const tensor_size_t dims) const
+rfunction_t lasso_function_t<tloss>::make(const tensor_size_t dims) const
 {
     const auto seed   = parameter("function::seed").template value<uint64_t>();
     const auto alpha1 = parameter("function::lasso::alpha1").template value<scalar_t>();
     const auto sratio = parameter("function::lasso::sratio").template value<scalar_t>();
     const auto modulo = parameter("function::lasso::modulo").template value<tensor_size_t>();
 
-    return std::make_unique<function_lasso_t<tloss>>(dims, seed, alpha1, sratio, modulo);
+    return std::make_unique<lasso_function_t<tloss>>(dims, seed, alpha1, sratio, modulo);
 }
 
-template class nano::function_lasso_t<nano::loss_mse_t>;
-template class nano::function_lasso_t<nano::loss_mae_t>;
-template class nano::function_lasso_t<nano::loss_hinge_t>;
-template class nano::function_lasso_t<nano::loss_cauchy_t>;
-template class nano::function_lasso_t<nano::loss_logistic_t>;
+template class nano::lasso_function_t<nano::loss_mse_t>;
+template class nano::lasso_function_t<nano::loss_mae_t>;
+template class nano::lasso_function_t<nano::loss_hinge_t>;
+template class nano::lasso_function_t<nano::loss_cauchy_t>;
+template class nano::lasso_function_t<nano::loss_logistic_t>;

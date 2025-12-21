@@ -1,6 +1,6 @@
 #pragma once
 
-#include <function/mlearn/linear.h>
+#include <function/ml/linear.h>
 
 namespace nano
 {

@@ -27,6 +27,8 @@ enum class function_type : uint8_t
     smooth,            ///< smooth function (convex or non-convex) without constraints
     convex_smooth,     ///< convex smooth function without constraints
     convex_nonsmooth,  ///< convex non-smooth function without constraints
+    convex_program,    ///< convex program (convex smooth objective with convex smooth inequality constraints and linear
+                       ///< equality constraints)
     linear_program,    ///< linear program (linear objective with linear constraints)
     quadratic_program, ///< quadratic problem (quadratic convex objective with linear constraints)
 };
@@ -40,6 +42,7 @@ inline enum_map_t<function_type> enum_string()
         {           function_type::smooth,            "smooth"},
         {    function_type::convex_smooth,     "convex-smooth"},
         { function_type::convex_nonsmooth,  "convex-nonsmooth"},
+        {   function_type::convex_program,    "convex-program"},
         {   function_type::linear_program,    "linear-program"},
         {function_type::quadratic_program, "quadratic-program"},
     };

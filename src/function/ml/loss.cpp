@@ -1,4 +1,4 @@
-#include <function/mlearn/loss.h>
+#include <function/ml/loss.h>
 
 using namespace nano;
 

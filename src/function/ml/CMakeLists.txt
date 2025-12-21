@@ -4,6 +4,7 @@ target_sources(function PRIVATE
     linear.h
     loss.h
     ridge.h
+    util.h
 
     elasticnet.cpp
     lasso.cpp

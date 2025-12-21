@@ -19,5 +19,5 @@ target_sources(function PRIVATE
 
 add_subdirectory(lp)
 add_subdirectory(qp)
-add_subdirectory(mlearn)
+add_subdirectory(ml)
 add_subdirectory(nonlinear)
