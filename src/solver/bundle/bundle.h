@@ -28,19 +28,42 @@ class NANO_PUBLIC bundle_t
 {
 public:
     ///
-    /// \brief solution to the quadratic optimization problem from (1).
+    /// \brief solution to the quadratic optimization problem from (1):
+    ///     min  r + |x - x_k|^2 / (2 * tau)
+    ///     s.t. f_k^hat(x) <= r,
+    ///          r <= l_k.
     ///
-    struct solution_t
+    /// NB: the level l_k is ignored if not finite, which corresponds to proximal methods like from (3, 5).
+    ///
+    struct prox_solution_t
     {
-        explicit solution_t(tensor_size_t dims = 0);
+        explicit prox_solution_t(tensor_size_t dims = 0);
 
         // attributes
-        vector_t      m_x;           ///< optimum: stability center
+        vector_t      m_x;           ///< optimum:
         scalar_t      m_r{0.0};      ///< optimum: level (if applicable)
         scalar_t      m_tau{0.0};    ///< proximal parameter
         vector_t      m_alphas;      ///< Lagrangian multiplier associated to the bundle inequalities
         scalar_t      m_lambda{0.0}; ///< Lagrangian multiplier associated to the level inequality (if applicable)
         solver_status m_status{};    ///< status of the QP solver
+    };
+
+    ///
+    /// \brief solution to the feasibility optimization problem from (1):
+    ///     min  s
+    ///     s.t. f_j^bar(x) - x <= l_k,
+    ///          s >= 0.
+    ///
+    struct feas_solution_t
+    {
+        explicit feas_solution_t(tensor_size_t dims = 0);
+
+        // attributes
+        vector_t      m_x;           ///< optimum:
+        scalar_t      m_s{0.0};      ///< optimum: slack (
+        vector_t      m_alphas;      ///< Lagrangian multiplier associated to the bundle inequalities
+        scalar_t      m_lambda{0.0}; ///< Lagrangian multiplier associated to the level inequality (if applicable)
+        solver_status m_status{};    ///< status of the LP solver
     };
 
     ///
@@ -121,8 +144,8 @@ public:
     /// NB: a convex quadratic program.
     /// NB: M is the identity matrix in (1).
     ///
-    const solution_t& solve(scalar_t tau, scalar_t level, const logger_t&);
-    const solution_t& solve(const matrix_t& M, scalar_t tau, scalar_t level, const logger_t&);
+    const prox_solution_t& solve(scalar_t tau, scalar_t level, const logger_t&);
+    const prox_solution_t& solve(const matrix_t& M, scalar_t tau, scalar_t level, const logger_t&);
 
 private:
     tensor_size_t dims() const { return m_x.size(); }
@@ -145,7 +168,7 @@ private:
     void append_aggregate();
     void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy, bool serious_step);
 
-    const solution_t& do_solve(scalar_t tau, scalar_t level, const logger_t&);
+    const prox_solution_t& do_solve(scalar_t tau, scalar_t level, const logger_t&);
 
     // attributes
     quadratic_program_t m_program;  ///< quadratic program
@@ -153,7 +176,7 @@ private:
     tensor_size_t       m_bsize{0}; ///< bundle: number of points
     matrix_t            m_bundleG;  ///< bundle: sub-gradients (g_j, -1)_j of shape (size, dims + 1)
     vector_t            m_bundleH;  ///< bundle: function values (f_j + <g_j, x_k^ - x_j>)_j of shape (size,)
-    solution_t          m_solution; ///< solution to the quadratic program
+    prox_solution_t     m_solution; ///< solution to the quadratic program
     vector_t            m_x;        ///< proximal/stability center (dims)
     vector_t            m_gx;       ///< function gradient at the proximal center (dims)
     scalar_t            m_fx;       ///< function value at the proximal center

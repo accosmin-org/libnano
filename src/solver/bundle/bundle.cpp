@@ -45,7 +45,7 @@ void write_cutting_plane(const vector_map_t g, scalar_t& h, const vector_cmap_t 
 }
 } // namespace
 
-bundle_t::solution_t::solution_t(const tensor_size_t dims)
+bundle_t::prox_solution_t::prox_solution_t(const tensor_size_t dims)
     : m_x(dims)
 {
 }
@@ -86,7 +86,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     append(y, gy, fy, serious_step);
 }
 
-const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
+const bundle_t::prox_solution_t& bundle_t::solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
 {
     const auto n = dims();
 
@@ -98,8 +98,8 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     return do_solve(tau, level, logger);
 }
 
-const bundle_t::solution_t& bundle_t::solve(const matrix_t& M, const scalar_t tau, const scalar_t level,
-                                            const logger_t& logger)
+const bundle_t::prox_solution_t& bundle_t::solve(const matrix_t& M, const scalar_t tau, const scalar_t level,
+                                                 const logger_t& logger)
 {
     const auto n = dims();
 
@@ -111,7 +111,7 @@ const bundle_t::solution_t& bundle_t::solve(const matrix_t& M, const scalar_t ta
     return do_solve(tau, level, logger);
 }
 
-const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
+const bundle_t::prox_solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
 {
     assert(size() > 0);
     assert(dims() == m_x.size());
