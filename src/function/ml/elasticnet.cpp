@@ -8,7 +8,7 @@ template <class tloss>
 elasticnet_function_t<tloss>::elasticnet_function_t(const tensor_size_t dims, const uint64_t seed,
                                                     const scalar_t alpha1, const scalar_t alpha2, const scalar_t sratio,
                                                     const tensor_size_t modulo, const optimization_type type)
-    : function_t(scat(tloss::basename, "+elasticnet"), ::make_size(dims))
+    : function_t(scat(tloss::basename, "+elasticnet"), ::make_size(dims, type))
     , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), seed, modulo, tloss::regression)
 {
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));

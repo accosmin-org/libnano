@@ -1,5 +1,8 @@
 #include <function/ml/lasso.h>
 #include <nano/core/strutil.h>
+#include <nano/critical.h>
+#include <nano/function/bounds.h>
+#include <nano/function/cuts.h>
 
 using namespace nano;
 
@@ -7,7 +10,7 @@ template <class tloss>
 lasso_function_t<tloss>::lasso_function_t(const tensor_size_t dims, const uint64_t seed, const scalar_t alpha1,
                                           const scalar_t sratio, const tensor_size_t modulo,
                                           const optimization_type type)
-    : function_t(scat(tloss::basename, "+lasso"), ::make_size(dims))
+    : function_t(scat(tloss::basename, "+lasso"), ::make_size(dims, type))
     , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), seed, modulo, tloss::regression)
 {
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
@@ -19,6 +22,19 @@ lasso_function_t<tloss>::lasso_function_t(const tensor_size_t dims, const uint64
     function_t::convex(tloss::convex ? convexity::yes : convexity::no);
     function_t::smooth((tloss::smooth && type == optimization_type::constrained) ? smoothness::yes : smoothness::no);
     function_t::strong_convexity(0.0);
+
+    if (type == optimization_type::constrained)
+    {
+        const auto n = size() / 2;
+
+        auto A              = matrix_t{2 * n, 2 * n};
+        A.block(0, 0, n, n) = matrix_t::identity(n, n);
+        A.block(0, n, n, n) = -matrix_t::identity(n, n);
+        A.block(n, 0, n, n) = -matrix_t::identity(n, n);
+        A.block(n, n, n, n) = -matrix_t::identity(n, n);
+
+        critical(A * variable() <= vector_t::zero(2 * n));
+    }
 }
 
 template <class tloss>
