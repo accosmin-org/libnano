@@ -83,6 +83,8 @@ void make_function(rfunction_t& function, const tensor_size_t dims, const tensor
         for (const auto alpha1 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
             make_function(function, dims, seeds, functions, "function::lasso::alpha1", alpha1);
+            make_function(function, dims, seeds, functions, "function::lasso::alpha1", alpha1, "function::lasso::type",
+                          lasso_type::constrained);
         }
     }
 
@@ -100,6 +102,9 @@ void make_function(rfunction_t& function, const tensor_size_t dims, const tensor
         {
             make_function(function, dims, seeds, functions, "function::elasticnet::alpha1", alpha12,
                           "function::elasticnet::alpha2", alpha12);
+            make_function(function, dims, seeds, functions, "function::elasticnet::alpha1", alpha12,
+                          "function::elasticnet::alpha2", alpha12, "function::elasticnet::type",
+                          lasso_type::constrained);
         }
     }
 

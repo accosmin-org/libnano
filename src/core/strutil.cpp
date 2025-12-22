@@ -1,13 +1,5 @@
 #include <nano/core/strutil.h>
-
 #include <algorithm>
-#include <charconv>
-#include <cstdint>
-#include <nano/enum.h>
-#include <nano/string.h>
-#include <sstream>
-#include <stdexcept>
-#include <typeinfo>
 
 using namespace nano;
 

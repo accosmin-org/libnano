@@ -1,16 +1,12 @@
 #include <function/ml/lasso.h>
 #include <nano/core/strutil.h>
-#include <nano/critical.h>
-#include <nano/function/bounds.h>
-#include <nano/function/cuts.h>
 
 using namespace nano;
 
 template <class tloss>
 lasso_function_t<tloss>::lasso_function_t(const tensor_size_t dims, const uint64_t seed, const scalar_t alpha1,
-                                          const scalar_t sratio, const tensor_size_t modulo,
-                                          const optimization_type type)
-    : function_t(scat(tloss::basename, "+lasso"), ::make_size(dims, type))
+                                          const scalar_t sratio, const tensor_size_t modulo, const lasso_type type)
+    : function_t(scat(tloss::basename, "+lasso+", type), ::make_size(dims, type))
     , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), seed, modulo, tloss::regression)
 {
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
@@ -20,20 +16,16 @@ lasso_function_t<tloss>::lasso_function_t(const tensor_size_t dims, const uint64
     register_parameter(parameter_t::make_enum("function::lasso::type", type));
 
     function_t::convex(tloss::convex ? convexity::yes : convexity::no);
-    function_t::smooth((tloss::smooth && type == optimization_type::constrained) ? smoothness::yes : smoothness::no);
     function_t::strong_convexity(0.0);
 
-    if (type == optimization_type::constrained)
+    if (type == lasso_type::constrained)
     {
-        const auto n = size() / 2;
-
-        auto A              = matrix_t{2 * n, 2 * n};
-        A.block(0, 0, n, n) = matrix_t::identity(n, n);
-        A.block(0, n, n, n) = -matrix_t::identity(n, n);
-        A.block(n, 0, n, n) = -matrix_t::identity(n, n);
-        A.block(n, n, n, n) = -matrix_t::identity(n, n);
-
-        critical(A * variable() <= vector_t::zero(2 * n));
+        constrain_lasso(*this);
+        function_t::smooth(tloss::smooth ? smoothness::yes : smoothness::no);
+    }
+    else
+    {
+        function_t::smooth(smoothness::no);
     }
 }
 
@@ -58,16 +50,39 @@ template <class tloss>
 scalar_t lasso_function_t<tloss>::do_eval(eval_t eval) const
 {
     const auto alpha1 = parameter("function::lasso::alpha1").template value<scalar_t>();
+    const auto type   = parameter("function::lasso::type").template value<lasso_type>();
 
-    auto fx = m_model.eval<tloss>(eval);
-
-    if (eval.has_grad())
+    if (type == lasso_type::constrained)
     {
-        eval.m_gx.array() += alpha1 * eval.m_x.array().sign();
-    }
+        const auto n = size() / 2;
 
-    fx += alpha1 * eval.m_x.template lpNorm<1>();
-    return fx;
+        auto fx = m_model.eval<tloss>(make_lasso_eval(eval));
+
+        if (eval.has_grad())
+        {
+            eval.m_gx.segment(n, n).array() = alpha1;
+        }
+
+        if (eval.has_hess())
+        {
+            update_lasso_hess(eval);
+        }
+
+        fx += alpha1 * eval.m_x.segment(n, n).sum();
+        return fx;
+    }
+    else
+    {
+        auto fx = m_model.eval<tloss>(eval);
+
+        if (eval.has_grad())
+        {
+            eval.m_gx.array() += alpha1 * eval.m_x.array().sign();
+        }
+
+        fx += alpha1 * eval.m_x.template lpNorm<1>();
+        return fx;
+    }
 }
 
 template <class tloss>
@@ -77,7 +92,7 @@ rfunction_t lasso_function_t<tloss>::make(const tensor_size_t dims) const
     const auto alpha1 = parameter("function::lasso::alpha1").template value<scalar_t>();
     const auto sratio = parameter("function::lasso::sratio").template value<scalar_t>();
     const auto modulo = parameter("function::lasso::modulo").template value<tensor_size_t>();
-    const auto type   = parameter("function::lasso::type").template value<optimization_type>();
+    const auto type   = parameter("function::lasso::type").template value<lasso_type>();
 
     return std::make_unique<lasso_function_t<tloss>>(dims, seed, alpha1, sratio, modulo, type);
 }
