@@ -1,9 +1,10 @@
-#include <function/ml/linear.h>
+#include <function/ml/dataset.h>
 
 using namespace nano;
 
-linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t outputs, const tensor_size_t inputs,
-                               const uint64_t seed, const tensor_size_t modulo_correlated_inputs, const bool regression)
+linear_dataset_t::linear_dataset_t(const tensor_size_t samples, const tensor_size_t outputs, const tensor_size_t inputs,
+                                   const uint64_t seed, const tensor_size_t modulo_correlated_inputs,
+                                   const bool regression)
     : m_inputs(samples, inputs)
     , m_targets(samples, outputs)
     , m_outputs(samples, outputs)
@@ -44,18 +45,18 @@ linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t 
     }
 }
 
-void linear_model_t::eval_outputs(const vector_cmap_t x) const
+void linear_dataset_t::eval_outputs(const vector_cmap_t x) const
 {
     eval_outputs(make_w(x));
 }
 
-void linear_model_t::eval_outputs(const matrix_cmap_t w) const
+void linear_dataset_t::eval_outputs(const matrix_cmap_t w) const
 {
     m_outputs.matrix().noalias() = m_inputs * w.transpose();
     m_outputs.matrix().rowwise() += m_boptimum.transpose();
 }
 
-void linear_model_t::eval_grad(vector_map_t gx) const
+void linear_dataset_t::eval_grad(vector_map_t gx) const
 {
     const auto samples = m_gradbuffs.rows();
 
@@ -66,7 +67,7 @@ void linear_model_t::eval_grad(vector_map_t gx) const
     gw.noalias() = m_gradbuffs.matrix().transpose() * m_inputs.matrix() / static_cast<scalar_t>(samples);
 }
 
-void linear_model_t::eval_hess(matrix_map_t hx) const
+void linear_dataset_t::eval_hess(matrix_map_t hx) const
 {
     const auto inputs  = m_inputs.matrix();
     const auto samples = m_gradbuffs.rows();
@@ -91,4 +92,14 @@ void linear_model_t::eval_hess(matrix_map_t hx) const
     }*/
 
     hx.array() /= static_cast<scalar_t>(samples);
+}
+
+matrix_map_t linear_dataset_t::make_w(vector_map_t x) const
+{
+    return map_tensor(x.data(), m_woptimum.dims());
+}
+
+matrix_cmap_t linear_dataset_t::make_w(vector_cmap_t x) const
+{
+    return map_tensor(x.data(), m_woptimum.dims());
 }

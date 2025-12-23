@@ -126,6 +126,9 @@ UTEST_CASE(select)
             ++total;
 
             UTEST_CHECK(function != nullptr);
+            UTEST_CHECK(function->has_type(fun_type));
+            UTEST_CHECK(function->constraints().empty());
+
             UTEST_CHECK_LESS_EQUAL(function->size(), 16);
             UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
             UTEST_CHECK(!expects_convex || function->convex());
@@ -205,6 +208,8 @@ UTEST_CASE(reproducibility)
             for (tensor_size_t i = 0; i < nseeds; ++i)
             {
                 const auto& seed_function = *(rfunctions[static_cast<size_t>(i)]);
+
+                UTEST_CHECK_EQUAL(function.size(), seed_function.size());
 
                 auto gx = make_random_vector<scalar_t>(function.size());
 

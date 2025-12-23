@@ -150,6 +150,11 @@ public:
     void clear_statistics() const;
 
     ///
+    /// \brief returns true if function is of the given type.
+    ///
+    bool has_type(function_type) const;
+
+    ///
     /// \brief construct test functions having:
     ///     - the number of dimensions within the given range,
     ///     - the given requirements in terms of smoothness, convexity and constraints.

@@ -146,8 +146,9 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
     const auto fx = function(x, gx);
 
     // central finite-difference approximated gradient
-    auto dg = std::numeric_limits<scalar_t>::max();
-    for (const auto deta : {1e-2, 3e-2, 1e-1, 3e-1, 1e+0, 3e+0, 1e+1, 3e+1, 1e+2, 3e+2})
+    auto dg   = std::numeric_limits<scalar_t>::max();
+    auto deta = 1e+3;
+    for (auto trial = 0; trial < 20; ++trial, deta *= 0.7)
     {
         xx = x;
 

@@ -1,35 +1,19 @@
 #include <function/ml/elasticnet.h>
-#include <function/ml/util.h>
-#include <nano/core/strutil.h>
 
 using namespace nano;
 
 template <class tloss>
 elasticnet_function_t<tloss>::elasticnet_function_t(const tensor_size_t dims, const uint64_t seed,
-                                                    const scalar_t alpha1, const scalar_t alpha2, const scalar_t sratio,
-                                                    const tensor_size_t modulo, const lasso_type type)
-    : function_t(scat(tloss::basename, "+elasticnet+", type), ::make_size(dims, type))
-    , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), seed, modulo, tloss::regression)
+                                                    const scalar_t sratio, const tensor_size_t modulo,
+                                                    const lasso_type type, const scalar_t alpha1, const scalar_t alpha2)
+    : linear_model_t<tloss>("elasticnet", dims, seed, sratio, modulo, type, alpha1, alpha2)
 {
-    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
-    register_parameter(parameter_t::make_scalar("function::elasticnet::alpha1", 0.0, LE, alpha1, LE, 1e+8));
-    register_parameter(parameter_t::make_scalar("function::elasticnet::alpha2", 0.0, LE, alpha2, LE, 1e+8));
-    register_parameter(parameter_t::make_scalar("function::elasticnet::sratio", 0.1, LE, sratio, LE, 1e+3));
-    register_parameter(parameter_t::make_integer("function::elasticnet::modulo", 1, LE, modulo, LE, 100));
-    register_parameter(parameter_t::make_enum("function::elasticnet::type", type));
-
-    function_t::convex(tloss::convex ? convexity::yes : convexity::no);
-    function_t::strong_convexity(alpha2);
-
-    if (type == lasso_type::constrained)
-    {
-        constrain_lasso(*this);
-        function_t::smooth(tloss::smooth ? smoothness::yes : smoothness::no);
-    }
-    else
-    {
-        function_t::smooth((alpha1 == 0.0 && tloss::smooth) ? smoothness::yes : smoothness::no);
-    }
+    this->register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
+    this->register_parameter(parameter_t::make_scalar("function::elasticnet::alpha1", 0.0, LE, alpha1, LE, 1e+8));
+    this->register_parameter(parameter_t::make_scalar("function::elasticnet::alpha2", 0.0, LE, alpha2, LE, 1e+8));
+    this->register_parameter(parameter_t::make_scalar("function::elasticnet::sratio", 0.1, LE, sratio, LE, 1e+3));
+    this->register_parameter(parameter_t::make_integer("function::elasticnet::modulo", 1, LE, modulo, LE, 100));
+    this->register_parameter(parameter_t::make_enum("function::elasticnet::type", type));
 }
 
 template <class tloss>
@@ -41,74 +25,38 @@ rfunction_t elasticnet_function_t<tloss>::clone() const
 template <class tloss>
 string_t elasticnet_function_t<tloss>::do_name() const
 {
-    const auto seed   = parameter("function::seed").template value<uint64_t>();
-    const auto alpha1 = parameter("function::elasticnet::alpha1").template value<scalar_t>();
-    const auto alpha2 = parameter("function::elasticnet::alpha2").template value<scalar_t>();
-    const auto sratio = parameter("function::elasticnet::sratio").template value<scalar_t>();
-    const auto modulo = parameter("function::elasticnet::modulo").template value<tensor_size_t>();
+    const auto seed   = this->parameter("function::seed").template value<uint64_t>();
+    const auto alpha1 = this->parameter("function::elasticnet::alpha1").template value<scalar_t>();
+    const auto alpha2 = this->parameter("function::elasticnet::alpha2").template value<scalar_t>();
+    const auto sratio = this->parameter("function::elasticnet::sratio").template value<scalar_t>();
+    const auto modulo = this->parameter("function::elasticnet::modulo").template value<tensor_size_t>();
 
-    return scat(type_id(), "[alpha1=", alpha1, ",alpha2=", alpha2, ",sratio=", sratio, ",modulo=", modulo,
+    return scat(this->type_id(), "[alpha1=", alpha1, ",alpha2=", alpha2, ",sratio=", sratio, ",modulo=", modulo,
                 ",seed=", seed, "]");
 }
 
 template <class tloss>
-scalar_t elasticnet_function_t<tloss>::do_eval(eval_t eval) const
+scalar_t elasticnet_function_t<tloss>::do_eval(function_t::eval_t eval) const
 {
-    const auto alpha1 = parameter("function::elasticnet::alpha1").template value<scalar_t>();
-    const auto alpha2 = parameter("function::elasticnet::alpha2").template value<scalar_t>();
-    const auto type   = parameter("function::elasticnet::type").template value<lasso_type>();
+    const auto type   = this->parameter("function::elasticnet::type").template value<lasso_type>();
+    const auto alpha1 = this->parameter("function::elasticnet::alpha1").template value<scalar_t>();
+    const auto alpha2 = this->parameter("function::elasticnet::alpha2").template value<scalar_t>();
 
-    if (type == lasso_type::constrained)
-    {
-        const auto n = size() / 2;
-
-        auto fx = m_model.eval<tloss>(make_lasso_eval(eval));
-
-        if (eval.has_grad())
-        {
-            eval.m_gx.segment(0, n).array() += alpha2 * eval.m_x.segment(0, n).array();
-            eval.m_gx.segment(n, n).array() = alpha1;
-        }
-
-        if (eval.has_hess())
-        {
-            update_lasso_hess(eval);
-            eval.m_hx.block(0, 0, n, n).diagonal().array() += alpha2;
-        }
-
-        fx += alpha1 * eval.m_x.segment(n, n).sum() + 0.5 * (std::sqrt(alpha2) * eval.m_x.segment(0, n)).squaredNorm();
-        return fx;
-    }
-    else
-    {
-        auto fx = m_model.eval<tloss>(eval);
-
-        if (eval.has_grad())
-        {
-            eval.m_gx.array() += alpha1 * eval.m_x.array().sign() + alpha2 * eval.m_x.array();
-        }
-
-        if (eval.has_hess())
-        {
-            eval.m_hx.diagonal().array() += alpha2;
-        }
-
-        fx += alpha1 * eval.m_x.template lpNorm<1>() + 0.5 * (std::sqrt(alpha2) * eval.m_x).squaredNorm();
-        return fx;
-    }
+    return this->do_enet_eval(eval, type, alpha1, alpha2);
 }
 
 template <class tloss>
 rfunction_t elasticnet_function_t<tloss>::make(const tensor_size_t dims) const
 {
-    const auto seed   = parameter("function::seed").template value<uint64_t>();
-    const auto alpha1 = parameter("function::elasticnet::alpha1").template value<scalar_t>();
-    const auto alpha2 = parameter("function::elasticnet::alpha2").template value<scalar_t>();
-    const auto sratio = parameter("function::elasticnet::sratio").template value<scalar_t>();
-    const auto modulo = parameter("function::elasticnet::modulo").template value<tensor_size_t>();
-    const auto type   = parameter("function::elasticnet::type").template value<lasso_type>();
+    const auto seed   = this->parameter("function::seed").template value<uint64_t>();
+    const auto alpha1 = this->parameter("function::elasticnet::alpha1").template value<scalar_t>();
+    const auto alpha2 = this->parameter("function::elasticnet::alpha2").template value<scalar_t>();
+    const auto sratio = this->parameter("function::elasticnet::sratio").template value<scalar_t>();
+    const auto modulo = this->parameter("function::elasticnet::modulo").template value<tensor_size_t>();
+    const auto type   = this->parameter("function::elasticnet::type").template value<lasso_type>();
 
-    return std::make_unique<elasticnet_function_t<tloss>>(dims, seed, alpha1, alpha2, sratio, modulo, type);
+    return std::make_unique<elasticnet_function_t<tloss>>((type == lasso_type::constrained) ? (dims / 2) : dims, seed,
+                                                          sratio, modulo, type, alpha1, alpha2);
 }
 
 template class nano::elasticnet_function_t<nano::loss_mse_t>;

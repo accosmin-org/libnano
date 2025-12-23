@@ -1,8 +1,7 @@
 #pragma once
 
+#include <function/ml/linear.h>
 #include <function/ml/loss.h>
-#include <function/ml/util.h>
-#include <nano/function.h>
 
 namespace nano
 {
@@ -21,15 +20,15 @@ namespace nano
 /// NB: only the features with the index multiple of the `modulo` parameter are correlated with the targets.
 ///
 template <class tloss>
-class NANO_PUBLIC elasticnet_function_t final : public function_t, private tloss
+class NANO_PUBLIC elasticnet_function_t final : public linear_model_t<tloss>
 {
 public:
     ///
     /// \brief constructor
     ///
-    explicit elasticnet_function_t(tensor_size_t dims = 10, uint64_t seed = 42, scalar_t alpha1 = 1.0,
-                                   scalar_t alpha2 = 1.0, scalar_t sratio = 10.0, tensor_size_t modulo = 1,
-                                   lasso_type type = lasso_type::unconstrained);
+    explicit elasticnet_function_t(tensor_size_t dims = 10, uint64_t seed = 42, scalar_t sratio = 10.0,
+                                   tensor_size_t modulo = 1, lasso_type type = lasso_type::unconstrained,
+                                   scalar_t alpha1 = 1.0, scalar_t alpha2 = 1.0);
 
     ///
     /// \brief @see clonable_t
@@ -44,16 +43,12 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_eval(eval_t) const override;
+    scalar_t do_eval(function_t::eval_t) const override;
 
     ///
     /// \brief @see function_t
     ///
     rfunction_t make(tensor_size_t dims) const override;
-
-private:
-    // attributes
-    linear_model_t m_model; ///<
 };
 
 using elasticnet_function_mae_t      = elasticnet_function_t<loss_mae_t>;
