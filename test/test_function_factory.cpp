@@ -233,9 +233,9 @@ UTEST_CASE(reproducibility)
                 // different seeds => different outputs
                 // NB: ignore discontinuous functions as it is very likely for low dimensions to produce similar
                 //     function values and gradients even for different seeds!
-                if (nano::starts_with(function.name(), "kinks") || ///<
-                    nano::starts_with(function.name(), "mae") ||   ///<
-                    nano::starts_with(function.name(), "hinge"))   ///<
+                if (function.name().starts_with("kinks") || ///<
+                    function.name().starts_with("mae") ||   ///<
+                    function.name().starts_with("hinge"))   ///<
                 {
                     continue;
                 }

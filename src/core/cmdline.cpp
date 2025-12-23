@@ -11,12 +11,12 @@ namespace
 {
 auto valid_option_name(const std::string_view name)
 {
-    if (starts_with(name, "--"))
+    if (name.starts_with("--"))
     {
         // --name
         return name.size() > 2U && name[2U] != '-';
     }
-    else if (starts_with(name, "-"))
+    else if (name.starts_with("-"))
     {
         // -n or -name
         return name.size() > 1U;
@@ -97,9 +97,9 @@ void cmdconfig_t::setup(configurable_t& configurable)
         {
             const auto* const data = param_name.data();
             const auto        size = param_name.size();
-            const auto        name = starts_with(param_name, "--") ? std::string_view{data + 2U, size - 2U}
-                                   : starts_with(param_name, "-")  ? std::string_view{data + 1U, size - 1U}
-                                                                   : std::string_view{};
+            const auto        name = param_name.starts_with("--") ? std::string_view{data + 2U, size - 2U}
+                                   : param_name.starts_with("-")  ? std::string_view{data + 1U, size - 1U}
+                                                                  : std::string_view{};
 
             if (configurable.parameter_if(name) != nullptr)
             {
