@@ -81,16 +81,6 @@ tvalue from_string(const std::string_view& str, const tvalue& default_value)
 }
 
 ///
-/// \brief check if a string starts with a token (case sensitive).
-///
-NANO_PUBLIC bool starts_with(std::string_view str, std::string_view token);
-
-///
-/// \brief check if a string ends with a token (case sensitive).
-///
-NANO_PUBLIC bool ends_with(std::string_view str, std::string_view token);
-
-///
 /// \brief align a string to fill the given size (if possible).
 ///
 NANO_PUBLIC string_t align(std::string_view str, size_t str_size, alignment mode = alignment::left,

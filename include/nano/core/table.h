@@ -17,6 +17,8 @@ namespace nano
 ///
 struct NANO_PUBLIC cell_t
 {
+    auto operator<=>(const cell_t& other) const noexcept = default;
+
     ///
     /// \brief default constructor
     ///
@@ -36,11 +38,6 @@ struct NANO_PUBLIC cell_t
 };
 
 using cells_t = std::vector<cell_t>;
-
-inline bool operator==(const cell_t& c1, const cell_t& c2)
-{
-    return c1.m_data == c2.m_data && c1.m_span == c2.m_span && c1.m_alignment == c2.m_alignment;
-}
 
 ///
 /// \brief control column spanning.
@@ -80,6 +77,8 @@ public:
         delim,      ///< delimiting row
         data,       ///< data row
     };
+
+    auto operator<=>(const row_t& other) const noexcept = default;
 
     ///
     /// \brief default constructor
@@ -216,17 +215,14 @@ private:
     cells_t   m_cells;                      ///<
 };
 
-inline bool operator==(const row_t& r1, const row_t& r2)
-{
-    return r1.type() == r2.type() && std::operator==(r1.cells(), r2.cells());
-}
-
 ///
 /// \brief stores and formats tabular data for display.
 ///
 class NANO_PUBLIC table_t
 {
 public:
+    auto operator<=>(const table_t& other) const noexcept = default;
+
     ///
     /// \brief default constructor
     ///
@@ -321,11 +317,6 @@ private:
     // attributes
     std::vector<row_t> m_rows;
 };
-
-inline bool operator==(const table_t& t1, const table_t& t2)
-{
-    return std::operator==(t1.content(), t2.content());
-}
 
 ///
 /// \brief pretty-print the table.

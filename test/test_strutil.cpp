@@ -80,36 +80,4 @@ UTEST_CASE(resize)
     UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::center, '='), "===text===");
 }
 
-UTEST_CASE(ends_with)
-{
-    UTEST_CHECK(nano::ends_with("ToKeN", ""));
-    UTEST_CHECK(nano::ends_with("ToKeN", "N"));
-    UTEST_CHECK(nano::ends_with("ToKeN", "eN"));
-    UTEST_CHECK(nano::ends_with("ToKeN", "KeN"));
-    UTEST_CHECK(nano::ends_with("ToKeN", "oKeN"));
-    UTEST_CHECK(nano::ends_with("ToKeN", "ToKeN"));
-
-    UTEST_CHECK(!nano::ends_with("ToKeN", "n"));
-    UTEST_CHECK(!nano::ends_with("ToKeN", "en"));
-    UTEST_CHECK(!nano::ends_with("ToKeN", "ken"));
-    UTEST_CHECK(!nano::ends_with("ToKeN", "oken"));
-    UTEST_CHECK(!nano::ends_with("ToKeN", "Token"));
-}
-
-UTEST_CASE(starts_with)
-{
-    UTEST_CHECK(nano::starts_with("ToKeN", ""));
-    UTEST_CHECK(nano::starts_with("ToKeN", "T"));
-    UTEST_CHECK(nano::starts_with("ToKeN", "To"));
-    UTEST_CHECK(nano::starts_with("ToKeN", "ToK"));
-    UTEST_CHECK(nano::starts_with("ToKeN", "ToKe"));
-    UTEST_CHECK(nano::starts_with("ToKeN", "ToKeN"));
-
-    UTEST_CHECK(!nano::starts_with("ToKeN", "t"));
-    UTEST_CHECK(!nano::starts_with("ToKeN", "to"));
-    UTEST_CHECK(!nano::starts_with("ToKeN", "tok"));
-    UTEST_CHECK(!nano::starts_with("ToKeN", "toke"));
-    UTEST_CHECK(!nano::starts_with("ToKeN", "Token"));
-}
-
 UTEST_END_MODULE()

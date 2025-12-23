@@ -326,7 +326,7 @@ UTEST_CASE(cmdconfig)
         UTEST_CHECK_CLOSE(configurable.parameter("fparam").value<double>(), 0.42, 1e-15);
     }
     {
-        UTEST_CHECK(ends_with(stream.str(), "parameter '--xparam' was not used.\n"));
+        UTEST_CHECK(stream.str().ends_with("parameter '--xparam' was not used.\n"));
     }
 }
 

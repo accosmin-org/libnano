@@ -144,21 +144,6 @@ tensor_size_t size(const tensor_dims_t<trank>& dims)
     static_assert(trank >= 1, "invalid number of tensor dimensions");
     return detail::product<0>(dims);
 }
-
-///
-/// \brief compare two tensor by dimension.
-///
-template <size_t trank>
-bool operator==(const tensor_dims_t<trank>& dims1, const tensor_dims_t<trank>& dims2)
-{
-    return std::operator==(dims1, dims2);
-}
-
-template <size_t trank>
-bool operator!=(const tensor_dims_t<trank>& dims1, const tensor_dims_t<trank>& dims2)
-{
-    return !(dims1 == dims2);
-}
 } // namespace nano
 
 namespace std // NOLINT(cert-dcl58-cpp)
