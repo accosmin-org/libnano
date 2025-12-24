@@ -89,87 +89,149 @@ UTEST_CASE(stats)
     }
 }
 
-UTEST_CASE(select)
+UTEST_CASE(select_any)
 {
-    // clang-format off
-    const auto types =
+    const auto functions = function_t::make({4, 16, function_type::any});
+    for (const auto& function : functions)
     {
-        function_type::convex,
-        function_type::smooth,
-        function_type::convex_smooth,
-        function_type::convex_nonsmooth
-    };
-    // clang-format on
-
-    for (const auto fun_type : types)
-    {
-        UTEST_NAMED_CASE(scat(fun_type));
-
-        auto total                 = 0;
-        auto counts_per_convexity  = std::unordered_map<bool, int>{};
-        auto counts_per_smoothness = std::unordered_map<bool, int>{};
-        auto counts_per_size       = std::unordered_map<tensor_size_t, int>{};
-
-        // clang-format off
-        const auto expects_convex =
-            (fun_type == function_type::convex) ||
-            (fun_type == function_type::convex_smooth) ||
-            (fun_type == function_type::convex_nonsmooth);
-
-        const auto expects_smooth =
-            (fun_type == function_type::smooth) ||
-            (fun_type == function_type::convex_smooth);
-        // clang-format on
-
-        for (const auto& function : function_t::make({4, 16, fun_type}))
-        {
-            ++total;
-
-            UTEST_CHECK(function != nullptr);
-            UTEST_CHECK(function->has_type(fun_type));
-            UTEST_CHECK(function->constraints().empty());
-
-            UTEST_CHECK_LESS_EQUAL(function->size(), 16);
-            UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
-            UTEST_CHECK(!expects_convex || function->convex());
-            UTEST_CHECK(!expects_smooth || function->smooth());
-
-            counts_per_size[function->size()]++;
-            counts_per_convexity[function->convex()]++;
-            counts_per_smoothness[function->smooth()]++;
-        }
-
-        UTEST_CHECK_EQUAL(counts_per_size[4], total / 3);
-        UTEST_CHECK_EQUAL(counts_per_size[8], total / 3);
-        UTEST_CHECK_EQUAL(counts_per_size[16], total / 3);
-
-        if (expects_convex)
-        {
-            UTEST_CHECK_GREATER(counts_per_convexity[true], 0);
-            UTEST_CHECK_EQUAL(counts_per_convexity[false], 0);
-        }
-        else
-        {
-            UTEST_CHECK_GREATER(counts_per_convexity[true], 0);
-            UTEST_CHECK_GREATER(counts_per_convexity[false], 0);
-        }
-
-        if (expects_smooth)
-        {
-            UTEST_CHECK_GREATER(counts_per_smoothness[true], 0);
-            UTEST_CHECK_EQUAL(counts_per_smoothness[false], 0);
-        }
-        else if (fun_type == function_type::convex_nonsmooth)
-        {
-            UTEST_CHECK_EQUAL(counts_per_smoothness[true], 0);
-            UTEST_CHECK_GREATER(counts_per_smoothness[false], 0);
-        }
-        else
-        {
-            UTEST_CHECK_GREATER(counts_per_smoothness[true], 0);
-            UTEST_CHECK_GREATER(counts_per_smoothness[false], 0);
-        }
+        UTEST_REQUIRE(function);
+        UTEST_NAMED_CASE(function->name());
+        UTEST_CHECK_LESS_EQUAL(function->size(), 16);
+        UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
+        UTEST_CHECK(function->has_type(function_type::any));
     }
+    UTEST_CHECK_GREATER(functions.size(), 20);
+}
+
+UTEST_CASE(select_convex)
+{
+    const auto functions = function_t::make({4, 16, function_type::convex});
+    for (const auto& function : functions)
+    {
+        UTEST_REQUIRE(function);
+        UTEST_NAMED_CASE(function->name());
+        UTEST_CHECK_LESS_EQUAL(function->size(), 16);
+        UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
+        UTEST_CHECK(function->convex());
+        UTEST_CHECK(function->constraints().empty());
+        UTEST_CHECK(function->has_type(function_type::any));
+        UTEST_CHECK(function->has_type(function_type::convex));
+        UTEST_CHECK(!function->has_type(function_type::linear_program));
+        UTEST_CHECK(!function->has_type(function_type::quadratic_program));
+    }
+    UTEST_CHECK_GREATER(functions.size(), 20);
+}
+
+UTEST_CASE(select_smooth)
+{
+    const auto functions = function_t::make({4, 16, function_type::smooth});
+    for (const auto& function : functions)
+    {
+        UTEST_REQUIRE(function);
+        UTEST_NAMED_CASE(function->name());
+        UTEST_CHECK_LESS_EQUAL(function->size(), 16);
+        UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
+        UTEST_CHECK(function->smooth());
+        UTEST_CHECK(function->constraints().empty());
+        UTEST_CHECK(function->has_type(function_type::any));
+        UTEST_CHECK(function->has_type(function_type::smooth));
+        UTEST_CHECK(!function->has_type(function_type::convex_nonsmooth));
+        UTEST_CHECK(!function->has_type(function_type::linear_program));
+        UTEST_CHECK(!function->has_type(function_type::quadratic_program));
+    }
+    UTEST_CHECK_GREATER(functions.size(), 20);
+}
+
+UTEST_CASE(select_convex_smooth)
+{
+    const auto functions = function_t::make({4, 16, function_type::convex_smooth});
+    for (const auto& function : functions)
+    {
+        UTEST_REQUIRE(function);
+        UTEST_NAMED_CASE(function->name());
+        UTEST_CHECK_LESS_EQUAL(function->size(), 16);
+        UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
+        UTEST_CHECK(function->convex());
+        UTEST_CHECK(function->smooth());
+        UTEST_CHECK(function->constraints().empty());
+        UTEST_CHECK(function->has_type(function_type::any));
+        UTEST_CHECK(function->has_type(function_type::convex));
+        UTEST_CHECK(function->has_type(function_type::smooth));
+        UTEST_CHECK(function->has_type(function_type::convex_smooth));
+        UTEST_CHECK(!function->has_type(function_type::convex_nonsmooth));
+        UTEST_CHECK(!function->has_type(function_type::linear_program));
+        UTEST_CHECK(!function->has_type(function_type::quadratic_program));
+    }
+    UTEST_CHECK_GREATER(functions.size(), 20);
+}
+
+UTEST_CASE(select_convex_nonsmooth)
+{
+    const auto functions = function_t::make({4, 16, function_type::convex_nonsmooth});
+    for (const auto& function : functions)
+    {
+        UTEST_REQUIRE(function);
+        UTEST_NAMED_CASE(function->name());
+        UTEST_CHECK_LESS_EQUAL(function->size(), 16);
+        UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
+        UTEST_CHECK(function->convex());
+        UTEST_CHECK(!function->smooth());
+        UTEST_CHECK(function->constraints().empty());
+        UTEST_CHECK(function->has_type(function_type::any));
+        UTEST_CHECK(function->has_type(function_type::convex));
+        UTEST_CHECK(!function->has_type(function_type::smooth));
+        UTEST_CHECK(!function->has_type(function_type::convex_smooth));
+        UTEST_CHECK(function->has_type(function_type::convex_nonsmooth));
+        UTEST_CHECK(!function->has_type(function_type::linear_program));
+        UTEST_CHECK(!function->has_type(function_type::quadratic_program));
+    }
+    UTEST_CHECK_GREATER(functions.size(), 20);
+}
+
+UTEST_CASE(select_linear_program)
+{
+    const auto functions = function_t::make({4, 16, function_type::linear_program});
+    for (const auto& function : functions)
+    {
+        UTEST_REQUIRE(function);
+        UTEST_NAMED_CASE(function->name());
+        UTEST_CHECK_LESS_EQUAL(function->size(), 16);
+        UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
+        UTEST_CHECK(function->convex());
+        UTEST_CHECK(function->smooth());
+        UTEST_CHECK(!function->constraints().empty());
+        UTEST_CHECK(function->has_type(function_type::any));
+        UTEST_CHECK(!function->has_type(function_type::convex));
+        UTEST_CHECK(!function->has_type(function_type::smooth));
+        UTEST_CHECK(!function->has_type(function_type::convex_smooth));
+        UTEST_CHECK(!function->has_type(function_type::convex_nonsmooth));
+        UTEST_CHECK(function->has_type(function_type::linear_program));
+        UTEST_CHECK(!function->has_type(function_type::quadratic_program));
+    }
+    UTEST_CHECK_GREATER(functions.size(), 20);
+}
+
+UTEST_CASE(select_quadratic_program)
+{
+    const auto functions = function_t::make({4, 16, function_type::quadratic_program});
+    for (const auto& function : functions)
+    {
+        UTEST_REQUIRE(function);
+        UTEST_NAMED_CASE(function->name());
+        UTEST_CHECK_LESS_EQUAL(function->size(), 16);
+        UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
+        UTEST_CHECK(function->convex());
+        UTEST_CHECK(function->smooth());
+        UTEST_CHECK(!function->constraints().empty());
+        UTEST_CHECK(function->has_type(function_type::any));
+        UTEST_CHECK(!function->has_type(function_type::convex));
+        UTEST_CHECK(!function->has_type(function_type::smooth));
+        UTEST_CHECK(!function->has_type(function_type::convex_smooth));
+        UTEST_CHECK(!function->has_type(function_type::convex_nonsmooth));
+        UTEST_CHECK(!function->has_type(function_type::linear_program));
+        UTEST_CHECK(function->has_type(function_type::quadratic_program));
+    }
+    UTEST_CHECK_GREATER(functions.size(), 20);
 }
 
 UTEST_CASE(reproducibility)
