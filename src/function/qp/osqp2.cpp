@@ -25,7 +25,7 @@ quadratic_program_osqp2_t::quadratic_program_osqp2_t(const tensor_size_t dims, c
     const auto x = make_full_vector<scalar_t>(n, [&]() { return gdist(rng); });
 
     const auto M = make_full_matrix<scalar_t>(n, n, [&]() { return (sdist(rng) < 0.85) ? gdist(rng) : 0.0; });
-    const auto A = make_full_matrix<scalar_t>(p, n, [&]() { return (sdist(rng) < 0.75) ? gdist(rng) : 0.0; });
+    const auto A = make_full_matrix<scalar_t>(p, n, [&]() { return (sdist(rng) < 0.95) ? gdist(rng) : 0.0; });
 
     // NB: need to remove rows with all zero components from the linear constraints!
     auto Aeq = A;

@@ -362,4 +362,18 @@ UTEST_CASE(regression4)
     check_minimize(make_solvers(), *(function->make(4)), x0);
 }
 
+UTEST_CASE(regression5)
+{
+    const auto function =
+        make_function("osqp1", "function::seed", 9748, "function::osqp1::nineqs", 20, "function::osqp1::alpha", 1e-2);
+
+    const auto x0 =
+        make_vector<scalar_t>(0.6327392975240553, -0.9612990048876126, -0.541689233694713, -0.3686545338759322,
+                              0.3306010022895014, -0.2338572586587671, 0.4433552578701589, -0.9556576388617506,
+                              0.1274485391841107, -0.3499948805364379, 0.5608896143053079, 0.8373474994175276,
+                              0.6012071098661251, 0.08468518672380054, 0.7070154256121912, 0.7113906560411889);
+
+    check_minimize(make_solvers(), *(function->make(16)), x0);
+}
+
 UTEST_END_MODULE()

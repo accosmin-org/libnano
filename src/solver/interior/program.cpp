@@ -66,14 +66,14 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     v.array() = 1.0;
     w.array() = u.array();
 
-    /*// move towards the center of the feasibility set to improve convergence: see (1), p. 485
+    // move towards the center of the feasibility set to improve convergence: see (1), p. 485
     update_solver();
     update_residual(0.0);
     solve(logger_t{});
 
     y.array() = (y + dy).array().abs().max(1.0);
     u.array() = (u + du).array().abs().max(1.0);
-    w.array() = u.array();*/
+    w.array() = u.array();
 
     update_original();
 }
