@@ -83,7 +83,7 @@ public:
                 eval.m_hx.diagonal().array() += alpha2;
             }
 
-            fx += alpha1 * x.lpNorm<1>() + 0.5 * (std::sqrt(alpha2) * x).squaredNorm();
+            fx += alpha1 * x.template lpNorm<1>() + 0.5 * (std::sqrt(alpha2) * x).squaredNorm();
             return fx;
         }
     }
@@ -143,7 +143,7 @@ private:
 
         default:
             // solve for (x, z)
-            return std::max(2 * dims, tensor_size_t{2});
+            return 2 * std::max(dims, tensor_size_t{2});
         }
     }
 
