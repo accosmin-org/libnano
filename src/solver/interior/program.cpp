@@ -66,14 +66,14 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     v.array() = 1.0;
     w.array() = u.array();
 
-    // move towards the center of the feasibility set to improve convergence: see (1), p. 485
+    /*// move towards the center of the feasibility set to improve convergence: see (1), p. 485
     update_solver();
     update_residual(0.0);
     solve(logger_t{});
 
     y.array() = (y + dy).array().abs().max(1.0);
     u.array() = (u + du).array().abs().max(1.0);
-    w.array() = u.array();
+    w.array() = u.array();*/
 
     update_original();
 }
@@ -100,11 +100,11 @@ program_t::stats_t program_t::update(const scalar_t tau, const logger_t& logger)
             return stats;
         }
 
-        const auto alpha_affine = std::min(make_umax(y, dy, tau), make_umax(u, du, tau));
+        const auto alpha_affine = std::min(make_umax(y, dy, 1.0), make_umax(u, du, 1.0));
         const auto miu          = y.dot(u);
         const auto miu_affine   = (y + alpha_affine * dy).dot(u + alpha_affine * du);
 
-        stats.m_sigma = std::clamp(std::pow(miu_affine / miu, 3.0), 0.0, 1.0);
+        stats.m_sigma = std::clamp(std::pow(miu_affine / miu, 2.0), 0.0, 1.0);
 
         // corrector step
         m_rcent.array() =
@@ -307,7 +307,15 @@ void program_t::update_solver()
     m_lmat.block(n, 0, p, n) = m_A.matrix();
     m_lmat.block(n, n, p, p) = matrix_t::zero(p, p);
 
+    const auto epsilon = 1e-11;
+
+    m_lmat.block(0, 0, n, n).diagonal().array() += epsilon;
+    m_lmat.block(n, n, p, p).diagonal().array() -= epsilon;
+
     m_solver.compute(m_lmat.matrix());
+
+    m_lmat.block(0, 0, n, n).diagonal().array() -= epsilon;
+    m_lmat.block(n, n, p, p).diagonal().array() += epsilon;
 }
 
 void program_t::update_original()

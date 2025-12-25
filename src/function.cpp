@@ -14,9 +14,8 @@
 #include <function/qp/osqp2.h>
 #include <function/qp/osqp4.h>
 
-#include <function/ml/elasticnet.h>
-#include <function/ml/lasso.h>
-#include <function/ml/ridge.h>
+#include <function/ml/enet.h>
+#include <function/ml/enet_cp.h>
 
 #include <function/nonlinear/axis_ellipsoid.h>
 #include <function/nonlinear/cauchy.h>
@@ -87,33 +86,27 @@ void make_function(rfunction_t& function, const function_type type, const tensor
 {
     // NB: generate different regularization parameters for various linear ML models
     // to assess the difficulty of the resulting numerical optimization problems.
-    if (function->parameter_if("function::lasso::alpha1") != nullptr)
+    if (function->parameter_if("function::enet::alpha1") != nullptr)
+    {
+        for (const auto alpha1 : {0.0, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
+        {
+            for (const auto alpha2 : {0.0, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
+            {
+                make_function(function, type, dims, seeds, functions, "function::enet::alpha1", alpha1,
+                              "function::enet::alpha2", alpha2);
+            }
+        }
+    }
+
+    else if (function->parameter_if("function::enet+cp::alpha1") != nullptr)
     {
         for (const auto alpha1 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
-            make_function(function, type, dims, seeds, functions, "function::lasso::alpha1", alpha1);
-            make_function(function, type, dims, seeds, functions, "function::lasso::alpha1", alpha1,
-                          "function::lasso::type", lasso_type::constrained);
-        }
-    }
-
-    else if (function->parameter_if("function::ridge::alpha2") != nullptr)
-    {
-        for (const auto alpha2 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
-        {
-            make_function(function, type, dims, seeds, functions, "function::ridge::alpha2", alpha2);
-        }
-    }
-
-    else if (function->parameter_if("function::elasticnet::alpha1") != nullptr)
-    {
-        for (const auto alpha12 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
-        {
-            make_function(function, type, dims, seeds, functions, "function::elasticnet::alpha1", alpha12,
-                          "function::elasticnet::alpha2", alpha12);
-            make_function(function, type, dims, seeds, functions, "function::elasticnet::alpha1", alpha12,
-                          "function::elasticnet::alpha2", alpha12, "function::elasticnet::type",
-                          lasso_type::constrained);
+            for (const auto alpha2 : {0.0, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
+            {
+                make_function(function, type, dims, seeds, functions, "function::enet+cp::alpha1", alpha1,
+                              "function::enet+cp::alpha2", alpha2);
+            }
         }
     }
 
@@ -444,24 +437,17 @@ factory_t<function_t>& function_t::all()
         manager.add<function_geometric_optimization_t>(
             "generic geometric optimization function: f(x) = sum(i, exp(alpha_i + a_i.dot(x)))");
 
-        manager.add<lasso_function_mse_t>("mean squared error (MSE) with lasso regularization");
-        manager.add<lasso_function_mae_t>("mean absolute error (MAE) with lasso regularization");
-        manager.add<lasso_function_hinge_t>("hinge loss (linear SVM) with lasso regularization");
-        manager.add<lasso_function_cauchy_t>("cauchy loss (robust regression) with lasso regularization");
-        manager.add<lasso_function_logistic_t>("logistic loss (logistic regression) with lasso regularization");
+        manager.add<enet_function_mse_t>("mean squared error (MSE) with elastic net regularization");
+        manager.add<enet_function_mae_t>("mean absolute error (MAE) with elastic net regularization");
+        manager.add<enet_function_hinge_t>("hinge loss (linear SVM) with elastic net regularization");
+        manager.add<enet_function_cauchy_t>("cauchy loss (robust regression) with elastic net regularization");
+        manager.add<enet_function_logistic_t>("logistic loss (logistic regression) with elastic net regularization");
 
-        manager.add<ridge_function_mse_t>("mean squared error (MSE) with ridge regularization");
-        manager.add<ridge_function_mae_t>("mean absolute error (MAE) with ridge regularization");
-        manager.add<ridge_function_hinge_t>("hinge loss (linear SVM) with ridge regularization");
-        manager.add<ridge_function_cauchy_t>("cauchy loss (robust regression) with ridge regularization");
-        manager.add<ridge_function_logistic_t>("logistic loss (logistic regression) with ridge regularization");
-
-        manager.add<elasticnet_function_mse_t>("mean squared error (MSE) with elastic net regularization");
-        manager.add<elasticnet_function_mae_t>("mean absolute error (MAE) with elastic net regularization");
-        manager.add<elasticnet_function_hinge_t>("hinge loss (linear SVM) with elastic net regularization");
-        manager.add<elasticnet_function_cauchy_t>("cauchy loss (robust regression) with elastic net regularization");
-        manager.add<elasticnet_function_logistic_t>(
-            "logistic loss (logistic regression) with elastic net regularization");
+        manager.add<enet_program_mse_t>("mean squared error (MSE) with elastic net regularization");
+        manager.add<enet_program_mae_t>("mean absolute error (MAE) with elastic net regularization");
+        manager.add<enet_program_hinge_t>("hinge loss (linear SVM) with elastic net regularization");
+        manager.add<enet_program_cauchy_t>("cauchy loss (robust regression) with elastic net regularization");
+        manager.add<enet_program_logistic_t>("logistic loss (logistic regression) with elastic net regularization");
 
         manager.add<linear_program_cvx48b_t>("linear program: ex. 4.8(b), 'Convex Optimization', 2nd edition");
         manager.add<linear_program_cvx48c_t>("linear program: ex. 4.8(c), 'Convex Optimization', 2nd edition");

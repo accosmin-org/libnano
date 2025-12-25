@@ -1,6 +1,6 @@
 #pragma once
 
-#include <function/ml/linear.h>
+#include <nano/tensor.h>
 
 namespace nano
 {

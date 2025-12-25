@@ -1,13 +1,10 @@
 target_sources(function PRIVATE
     dataset.h
-    elasticnet.h
-    lasso.h
-    linear.h
+    enet.h
+    enet_cp.h
     loss.h
-    ridge.h
 
     dataset.cpp
-    elasticnet.cpp
-    lasso.cpp
-    loss.cpp
-    ridge.cpp)
+    enet.cpp
+    enet_cp.cpp
+    loss.cpp)
