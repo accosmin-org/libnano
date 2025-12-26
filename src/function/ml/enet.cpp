@@ -82,8 +82,7 @@ scalar_t enet_function_t<tloss>::do_eval(function_t::eval_t eval) const
         eval.m_hx.diagonal().array() += alpha2;
     }
 
-    fx += alpha1 * x.template lpNorm<1>() + 0.5 * (std::sqrt(alpha2) * x).squaredNorm();
-    return fx;
+    return fx + alpha1 * x.template lpNorm<1>() + 0.5 * (std::sqrt(alpha2) * x).squaredNorm();
 }
 
 template <class tloss>

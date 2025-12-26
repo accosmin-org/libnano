@@ -129,6 +129,38 @@ void handle(linear_constraints_t& lc, [[maybe_unused]] tensor_size_t& ieq, [[may
     lc.m_G.row(ineq) = c.m_q.transpose();
     lc.m_h(ineq++)   = -c.m_r;
 }
+
+template <class tevaluator>
+scalar_t bisect_log(const tevaluator& evaluator, const scalar_t deta0, const scalar_t deta1, const scalar_t deta2,
+                    const scalar_t early_stopping_epsilon, const int max_iters = 10)
+{
+    auto trials = std::vector<std::pair<scalar_t, scalar_t>>{};
+    trials.reserve(3);
+
+    for (const auto deta : {deta0, deta1, deta2})
+    {
+        trials.emplace_back(evaluator(deta), deta);
+        if (trials.rbegin()->first < early_stopping_epsilon)
+        {
+            return trials.rbegin()->first;
+        }
+    }
+
+    for (auto iter = 0; iter < max_iters; ++iter)
+    {
+        std::ranges::sort(trials);
+
+        if (trials[0].first < early_stopping_epsilon)
+        {
+            break;
+        }
+
+        const auto deta = std::sqrt(trials[0].second * trials[1].second);
+        trials[2]       = std::make_pair(evaluator(deta), deta);
+    }
+
+    return trials[0].first;
+}
 } // namespace
 
 scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, const scalar_t early_stopping_epsilon)
@@ -146,9 +178,7 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
     const auto fx = function(x, gx);
 
     // central finite-difference approximated gradient
-    auto dg   = std::numeric_limits<scalar_t>::max();
-    auto deta = 3e+3;
-    for (auto trial = 0; trial < 20; ++trial, deta *= 0.5)
+    const auto evaluate = [&](const scalar_t deta)
     {
         xx = x;
 
@@ -159,7 +189,7 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
                 xx(i - 1) = x(i - 1);
             }
 
-            const auto hi = deta * eta * (1.0 + std::fabs(x(i)));
+            const auto hi = deta * eta;
 
             xx(i)          = x(i) + hi;
             const auto fxp = function(xx);
@@ -170,14 +200,10 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
             gx_approx(i) = (fxp - fxn) / (2.0 * hi);
         }
 
-        dg = std::min(dg, (gx - gx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx)));
-        if (dg < early_stopping_epsilon)
-        {
-            break;
-        }
-    }
+        return (gx - gx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
+    };
 
-    return dg;
+    return bisect_log(evaluate, 1e+1, 7e+3, 1e-2, early_stopping_epsilon);
 }
 
 scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, const scalar_t early_stopping_epsilon)
@@ -198,8 +224,7 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, cons
     const auto fx = function(x, {}, Hx);
 
     // central finite-difference approximated hessian
-    auto dH = std::numeric_limits<scalar_t>::max();
-    for (const auto deta : {1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1, 1e+0})
+    const auto evaluate = [&](const scalar_t deta)
     {
         xx = x;
         Hx_approx.full(0);
@@ -211,7 +236,7 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, cons
                 xx(i - 1) = x(i - 1);
             }
 
-            const auto hi = deta * eta * (1.0 + std::fabs(x(i)));
+            const auto hi = deta * eta;
 
             xx(i) = x(i) + hi;
             function(xx, gxp);
@@ -223,14 +248,10 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, cons
             Hx_approx.col(i) += (gxp - gxn) / (4.0 * hi);
         }
 
-        dH = std::min(dH, (Hx - Hx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx)));
-        if (dH < early_stopping_epsilon)
-        {
-            break;
-        }
-    }
+        return (Hx - Hx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
+    };
 
-    return dH;
+    return bisect_log(evaluate, 1e-2, 1e+0, 1e+1, early_stopping_epsilon);
 }
 
 scalar_t nano::convex_accuracy(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps)

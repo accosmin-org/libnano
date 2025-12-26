@@ -111,8 +111,7 @@ scalar_t enet_program_t<tloss>::do_eval(function_t::eval_t eval) const
         hx.block(0, 0, n, n).diagonal().array() += alpha2;
     }
 
-    fx += alpha1 * z.sum() + 0.5 * (std::sqrt(alpha2) * x).squaredNorm();
-    return fx;
+    return fx + alpha1 * z.sum() + 0.5 * (std::sqrt(alpha2) * x).squaredNorm();
 }
 
 template <class tloss>
