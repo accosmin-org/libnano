@@ -131,35 +131,30 @@ void handle(linear_constraints_t& lc, [[maybe_unused]] tensor_size_t& ieq, [[may
 }
 
 template <class tevaluator>
-scalar_t bisect_log(const tevaluator& evaluator, const scalar_t deta0, const scalar_t deta1, const scalar_t deta2,
-                    const scalar_t early_stopping_epsilon, const int max_iters = 10)
+scalar_t bisect_log(const tevaluator& evaluator, const scalar_t deta0, const scalar_t early_stopping_epsilon,
+                    const int max_iters = 40, const scalar_t beta = 0.7)
 {
-    auto trials = std::vector<std::pair<scalar_t, scalar_t>>{};
-    trials.reserve(3);
-
-    for (const auto deta : {deta0, deta1, deta2})
-    {
-        trials.emplace_back(evaluator(deta), deta);
-        if (trials.rbegin()->first < early_stopping_epsilon)
-        {
-            return trials.rbegin()->first;
-        }
-    }
+    auto min_value = std::numeric_limits<scalar_t>::max();
 
     for (auto iter = 0; iter < max_iters; ++iter)
     {
-        std::ranges::sort(trials);
-
-        if (trials[0].first < early_stopping_epsilon)
+        min_value = std::min(min_value, evaluator(deta0 * std::pow(beta, iter)));
+        if (min_value < early_stopping_epsilon)
         {
             break;
         }
 
-        const auto deta = std::sqrt(trials[0].second * trials[1].second);
-        trials[2]       = std::make_pair(evaluator(deta), deta);
+        if (iter > 0)
+        {
+            min_value = std::min(min_value, evaluator(deta0 * std::pow(beta, -iter)));
+            if (min_value < early_stopping_epsilon)
+            {
+                break;
+            }
+        }
     }
 
-    return trials[0].first;
+    return min_value;
 }
 } // namespace
 
@@ -167,11 +162,9 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
 {
     assert(x.size() == function.size());
 
-    const auto n   = function.size();
-    const auto eta = std::sqrt(std::numeric_limits<scalar_t>::epsilon());
-
-    auto xx        = vector_t{n};
-    auto gx_approx = vector_t{n};
+    const auto n         = function.size();
+    auto       xx        = vector_t{n};
+    auto       gx_approx = vector_t{n};
 
     // analytical gradient
     auto       gx = vector_t{n};
@@ -189,21 +182,19 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
                 xx(i - 1) = x(i - 1);
             }
 
-            const auto hi = deta * eta;
-
-            xx(i)          = x(i) + hi;
+            xx(i)          = x(i) + deta;
             const auto fxp = function(xx);
 
-            xx(i)          = x(i) - hi;
+            xx(i)          = x(i) - deta;
             const auto fxn = function(xx);
 
-            gx_approx(i) = (fxp - fxn) / (2.0 * hi);
+            gx_approx(i) = (fxp - fxn) / (2.0 * deta);
         }
 
         return (gx - gx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
     };
 
-    return bisect_log(evaluate, 1e+1, 7e+3, 1e-2, early_stopping_epsilon);
+    return bisect_log(evaluate, 1e-8, early_stopping_epsilon);
 }
 
 scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, const scalar_t early_stopping_epsilon)
@@ -211,13 +202,11 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, cons
     assert(function.smooth());
     assert(x.size() == function.size());
 
-    const auto n   = function.size();
-    const auto eta = std::cbrt(std::numeric_limits<scalar_t>::epsilon());
-
-    auto xx        = vector_t{n};
-    auto gxp       = vector_t{n};
-    auto gxn       = vector_t{n};
-    auto Hx_approx = matrix_t{n, n};
+    const auto n         = function.size();
+    auto       xx        = vector_t{n};
+    auto       gxp       = vector_t{n};
+    auto       gxn       = vector_t{n};
+    auto       Hx_approx = matrix_t{n, n};
 
     // analytical hessian
     auto       Hx = matrix_t{n, n};
@@ -236,22 +225,20 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, cons
                 xx(i - 1) = x(i - 1);
             }
 
-            const auto hi = deta * eta;
-
-            xx(i) = x(i) + hi;
+            xx(i) = x(i) + deta;
             function(xx, gxp);
 
-            xx(i) = x(i) - hi;
+            xx(i) = x(i) - deta;
             function(xx, gxn);
 
-            Hx_approx.row(i) += (gxp - gxn) / (4.0 * hi);
-            Hx_approx.col(i) += (gxp - gxn) / (4.0 * hi);
+            Hx_approx.row(i) += (gxp - gxn) / (4.0 * deta);
+            Hx_approx.col(i) += (gxp - gxn) / (4.0 * deta);
         }
 
         return (Hx - Hx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
     };
 
-    return bisect_log(evaluate, 1e-2, 1e+0, 1e+1, early_stopping_epsilon);
+    return bisect_log(evaluate, 3e-5, early_stopping_epsilon);
 }
 
 scalar_t nano::convex_accuracy(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps)
